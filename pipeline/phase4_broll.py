@@ -82,18 +82,41 @@ def fetch_broll(query: str, format_type: str, segment_index: int) -> str:
         except Exception as download_err:
             print(f"Failed to download video: {download_err}. Falling back to image...")
 
-    # Fallback: Image generation (Pollinations.ai)
+    # Fallback: Image generation (Pollinations.ai / PIL)
     print(f"Falling back to image generation for segment {segment_index}...")
     w, h = (1080, 1920) if format_type == "short" else (1920, 1080)
     try:
         encoded_query = urllib.parse.quote(query)
+        # Try with Flux first (higher quality)
         img_url = f"https://image.pollinations.ai/prompt/{encoded_query}?width={w}&height={h}&model=flux&nologo=true"
         r = requests.get(img_url, timeout=60)
+        
+        # If Flux fails or is rate-limited/payment required, try the default free model
+        if r.status_code != 200:
+            print("Flux model rate-limited or failed, trying default free model...")
+            img_url = f"https://image.pollinations.ai/prompt/{encoded_query}?width={w}&height={h}&nologo=true"
+            r = requests.get(img_url, timeout=60)
+            
         r.raise_for_status()
         with open(img_path, "wb") as f:
             f.write(r.content)
             
-        # Convert image to 6-second video clip using FFmpeg
+    except Exception as e:
+        print(f"Pollinations image generation failed: {e}. Generating PIL placeholder image...")
+        try:
+            from PIL import Image, ImageDraw
+            # Generate a dark background color
+            color = (random.randint(15, 40), random.randint(15, 40), random.randint(30, 70))
+            img = Image.new("RGB", (w, h), color=color)
+            draw = ImageDraw.Draw(img)
+            # Draw simple text overlay as a placeholder
+            draw.text((w // 2, h // 2), f"Visual: {query[:30]}...", fill=(200, 200, 200), anchor="mm")
+            img.save(img_path, "JPEG")
+        except Exception as PIL_err:
+            raise RuntimeError(f"All B-roll and PIL placeholder fallbacks failed: {e} | {PIL_err}") from PIL_err
+            
+    # Convert image to 6-second video clip using FFmpeg
+    try:
         print(f"Converting generated image {img_path} to video {out_path} using FFmpeg...")
         cmd = [
             "ffmpeg", "-y", "-loop", "1", "-i", img_path, "-t", "6",
@@ -103,5 +126,5 @@ def fetch_broll(query: str, format_type: str, segment_index: int) -> str:
         subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         print(f"B-roll image-video segment {segment_index} saved to {out_path}")
         return out_path
-    except Exception as e:
-        raise RuntimeError(f"All B-roll sources and image generation fallback failed for query '{query}': {e}") from e
+    except Exception as ffmpeg_err:
+        raise RuntimeError(f"FFmpeg conversion failed for segment {segment_index}: {ffmpeg_err}") from ffmpeg_err
