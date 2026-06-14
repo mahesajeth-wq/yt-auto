@@ -43,29 +43,24 @@ def generate_audio(script: dict) -> list[str]:
             print(f"Gemini TTS succeeded for segment {seg_id} (Voice: {voice})")
             
         except Exception as e:
-            print(f"Gemini TTS failed for segment {seg_id}: {e}. Trying Kokoro fallback...")
-            # Fallback: Kokoro TTS (CPU)
+            print(f"Gemini TTS failed for segment {seg_id}: {e}. Trying gTTS fallback...")
             try:
-                from kokoro import KPipeline
-                import numpy as np
-                import scipy.io.wavfile
+                from gtts import gTTS
+                temp_mp3 = f"output/tts_temp_{seg_id}.mp3"
+                tts = gTTS(text=seg["narration"], lang='en')
+                tts.save(temp_mp3)
                 
-                # Setup Kokoro pipeline for American English
-                ko = KPipeline(lang_code='a')
-                # Generator yields graphemes, phonemes, audio (numpy array)
-                generator = ko(seg["narration"], voice='af_heart', speed=1.0)
-                samples = []
-                for _, _, audio in generator:
-                    if audio is not None:
-                        samples.append(audio)
-                        
-                if not samples:
-                    raise RuntimeError("Kokoro generated no audio samples")
-                    
-                audio_np = np.concatenate(samples)
-                # Save as WAV at 24000Hz (Kokoro output is typically 24000Hz)
-                scipy.io.wavfile.write(out_path, 24000, audio_np)
-                print(f"Kokoro fallback succeeded for segment {seg_id}")
+                # Convert MP3 to WAV 24000Hz mono 16-bit PCM using FFmpeg
+                import subprocess
+                cmd = [
+                    "ffmpeg", "-y", "-i", temp_mp3,
+                    "-ar", "24000", "-ac", "1", "-c:a", "pcm_s16le",
+                    out_path
+                ]
+                subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                if os.path.exists(temp_mp3):
+                    os.remove(temp_mp3)
+                print(f"gTTS fallback succeeded for segment {seg_id}")
             except Exception as e2:
                 raise RuntimeError(f"Both TTS engines failed for segment {seg_id}: {e} | {e2}")
         
