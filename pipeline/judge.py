@@ -93,7 +93,7 @@ Video Metadata:
 Please watch the video and evaluate it against these 5 rubrics:
 1. **Cohesiveness & Alignment (CRITICAL)**: Does the voiceover audio match the visual B-roll clips and the text captions shown on screen? Check for any mismatch (e.g. if the audio discusses "Quantum Computing" but the text caption or B-roll displays terms like "CRISPR" or "Gene Editing"). If there is ANY mismatched topic, fail the video.
 2. **Hook Appeal**: Is the hook in the first 3-5 seconds of the video engaging and curiosity-inducing?
-3. **Subtitles/Captions**: Are subtitles present, readable, and matching the narration word-for-word?
+3. **Subtitles/Captions**: Are subtitles present, readable, and matching the narration word-for-word? Note: The video uses modern rapid-fire single-word subtitle style (typical for viral Shorts). This is the EXPECTED and CORRECT behavior. Do not fail the video for displaying one word at a time, as long as it matches what is being spoken.
 4. **Music & Audio Quality**: Is the background music clean, and is it mixed correctly without overpowering the voiceover?
 5. **Retention & Loopability**: Does the video contain a retention element (like a rewatch callout in segment 4)? Does it loop back seamlessly from the last segment to the first segment's narration? Note: Segment 5 echoing Segment 1's THEME (not its exact wording) is the desired outcome — flag verbatim repetition of Segment 1's sentence as a script-quality issue.
 
