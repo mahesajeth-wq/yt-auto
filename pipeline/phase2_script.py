@@ -51,6 +51,8 @@ CORRECT examples: "Stephen Hawking wheelchair smiling", "DNA double helix blue",
 WRONG examples: "visually jarring close-up of the topic", "macro b-roll of scientific
 element", "closing beautiful shot returning to start", "diagram concept visualization"
 
+For each segment, also provide a `broll_queries` array with 3-5 ALTERNATIVE search terms for the same visual concept. These should be synonyms, related concepts, or different angles on the same subject. The first entry should match `broll_query`.
+
 For any named person (scientist, historical figure): ALWAYS include their name in the query.
 For abstract science concepts: use the most recognizable visual symbol.
 
@@ -65,6 +67,7 @@ You MUST return your response ONLY as a raw JSON object with no markdown syntax.
       "id": 1,
       "narration": "hook sentence - must create information gap in 8 words or less",
       "broll_query": "{topic['topic']} black hole accretion disk space",
+      "broll_queries": ["{topic['topic']} black hole accretion disk space", "event horizon visualization", "gravitational lensing effect", "supermassive black hole animation"],
       "duration_target": 6
     }},
     {{
@@ -125,6 +128,8 @@ CORRECT examples: "Stephen Hawking wheelchair smiling", "DNA double helix blue",
 WRONG examples: "visually jarring close-up of the topic", "macro b-roll of scientific
 element", "closing beautiful shot returning to start", "diagram concept visualization"
 
+For each segment, also provide a `broll_queries` array with 3-5 ALTERNATIVE search terms for the same visual concept. These should be synonyms, related concepts, or different angles on the same subject. The first entry should match `broll_query`.
+
 For any named person (scientist, historical figure): ALWAYS include their name in the query.
 For abstract science concepts: use the most recognizable visual symbol.
 
@@ -139,6 +144,7 @@ You MUST return your response ONLY as a raw JSON object with no markdown syntax.
       "id": 1,
       "narration": "Opening narration hook...",
       "broll_query": "{topic['topic']} space stars universe",
+      "broll_queries": ["{topic['topic']} space stars universe", "galaxy nebula deep space", "cosmos starfield timelapse", "astronomical observatory night sky"],
       "duration_target": 30
     }}
     // ... total 15-18 segments

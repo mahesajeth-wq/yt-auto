@@ -19,7 +19,7 @@ def generate_thumbnail(final_video_path: str, thumbnail_text: str) -> str:
     # Use FFmpeg thumbnail filter to find most visually rich frame (not frame 0)
     cmd_frame = [
         "ffmpeg", "-y", "-i", final_video_path,
-        "-vf", "thumbnail=n=90",    # analyze first 90 frames, pick best
+        "-vf", "thumbnail=n=300",    # analyze first 300 frames (~10s), pick best
         "-frames:v", "1", "-q:v", "2", hook_frame_path
     ]
     subprocess.run(cmd_frame, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

@@ -25,6 +25,7 @@ PEXELS_API_KEY   = os.environ.get("PEXELS_API_KEY", "")
 PIXABAY_API_KEY  = os.environ.get("PIXABAY_API_KEY", "")
 COVERR_API_KEY   = os.environ.get("COVERR_API_KEY", "")   # free at coverr.co/developers
 NASA_API_KEY     = os.environ.get("NASA_API_KEY", "DEMO_KEY")  # free at api.nasa.gov
+FREESOUND_API_KEY = os.environ.get("FREESOUND_API_KEY", "")
 
 # ── YouTube OAuth ────────────────────────────────────────────────────────────
 YT_CLIENT_ID     = os.environ.get("YT_CLIENT_ID", "")
@@ -78,3 +79,5 @@ def validate_config():
         print("[Config] Coverr API: enabled (cinematic B-roll tier active).")
     if NASA_API_KEY:
         print(f"[Config] NASA API: enabled (key={'DEMO_KEY (rate-limited)' if NASA_API_KEY == 'DEMO_KEY' else 'custom'}).")
+    if FREESOUND_API_KEY:
+        print("[Config] Freesound API: enabled (CC0 ambient music tier active).")

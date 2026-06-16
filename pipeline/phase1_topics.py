@@ -84,21 +84,7 @@ Each object in the array must contain these exact fields:
     with open(topic_log_path, "w") as f:
         json.dump({"topics": published}, f, indent=2)
 
-    # 6. Commit and Push (GitHub Keepalive)
-    # Wrap in try/except so it doesn't fail the pipeline if run locally/offline
-    try:
-        # Check if we are in a Git repo and it's dirty
-        status = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True)
-        if topic_log_path in status.stdout:
-            print("Committing and pushing updated topic log...")
-            # Set basic user details if not configured
-            subprocess.run(["git", "config", "user.name", "yt-bot"], check=False)
-            subprocess.run(["git", "config", "user.email", "yt-bot@noreply"], check=False)
-            subprocess.run(["git", "add", topic_log_path], check=True)
-            subprocess.run(["git", "commit", "-m", "chore: update published topics log"], check=True)
-            # Push (ignore failures since pushing in a local debug run might fail)
-            subprocess.run(["git", "push"], check=False)
-    except Exception as git_err:
-        print(f"Git commit/push skipped/failed: {git_err}")
+    # Git commit/push is handled by the GitHub Actions workflow step
+    # to avoid double-commit race conditions with voice_state.json
 
     return selected_topic

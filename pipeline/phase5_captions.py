@@ -13,8 +13,8 @@ def generate_captions(audio_files: list[str], script: dict, format_type: str = "
     
     try:
         from faster_whisper import WhisperModel
-        print("Loading faster-whisper 'tiny' model on CPU...")
-        model = WhisperModel("tiny", device="cpu", compute_type="int8")
+        print("Loading faster-whisper 'base' model on CPU...")
+        model = WhisperModel("base", device="cpu", compute_type="int8")
         
         for i, (audio_path, seg) in enumerate(zip(audio_files, script["segments"])):
             print(f"Transcribing TTS file: {audio_path}...")

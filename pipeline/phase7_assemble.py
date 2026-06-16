@@ -29,7 +29,7 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
         print(f"Normalizing segment {i} B-roll to duration {duration:.3f}s...")
         cmd = [
             "ffmpeg", "-y", "-stream_loop", "-1", "-i", broll_path, "-t", f"{duration:.3f}",
-            "-vf", f"scale={w}:{h}:force_original_aspect_ratio=decrease,pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,setsar=1",
+            "-vf", f"scale={w}:{h}:force_original_aspect_ratio=decrease,pad={w}:{h}:(ow-iw)/2:(oh-ih)/2,eq=contrast=1.05:saturation=1.1:gamma=0.95,setsar=1",
             "-r", "30", "-c:v", "libx264", "-pix_fmt", "yuv420p", "-an", norm_path
         ]
         subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -119,7 +119,8 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
         "[2:a]volume=0.12,aloop=loop=-1:size=2147483647[music_loop];"
         "[3:a]volume=0.35[sfx];"
         "[tts][music_loop]amix=inputs=2:duration=first:normalize=0[mixed];"
-        "[mixed][sfx]amix=inputs=2:duration=first:normalize=0[audio_final]"
+        "[mixed][sfx]amix=inputs=2:duration=first:normalize=0[premix];"
+        "[premix]loudnorm=I=-14:TP=-1.5:LRA=11[audio_final]"
     )
 
     cmd = [

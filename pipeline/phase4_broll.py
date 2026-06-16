@@ -142,6 +142,44 @@ def _wikipedia_image(query: str) -> str | None:
         return None
 
 
+def _wikimedia_video(query: str) -> str | None:
+    """Search Wikimedia Commons for CC-licensed educational videos. No API key needed."""
+    try:
+        r = requests.get(
+            "https://commons.wikimedia.org/w/api.php",
+            params={
+                "action": "query",
+                "list": "search",
+                "srnamespace": "6",  # File namespace
+                "srsearch": f"{query} filetype:video",
+                "format": "json",
+                "srlimit": "5",
+            },
+            headers={"User-Agent": "yt-auto/1.0 (educational-pipeline)"},
+            timeout=20,
+        )
+        r.raise_for_status()
+        results = r.json().get("query", {}).get("search", [])
+        if not results:
+            return None
+
+        # Pick a result and get the actual file URL
+        import hashlib
+        title = results[0]["title"]  # e.g. "File:Example.webm"
+        filename = title.replace("File:", "").replace(" ", "_")
+        md5 = hashlib.md5(filename.encode()).hexdigest()
+        url = f"https://upload.wikimedia.org/wikipedia/commons/{md5[0]}/{md5[:2]}/{urllib.parse.quote(filename)}"
+
+        # Verify the URL is reachable
+        head = requests.head(url, timeout=10, allow_redirects=True)
+        if head.status_code == 200:
+            return url
+        return None
+    except Exception as e:
+        print(f"[B-roll] Wikimedia Commons failed for '{query}': {e}")
+        return None
+
+
 # ── Ken Burns zoom — applied to ALL image-to-video conversions ───────────────
 
 def _image_to_ken_burns_video(img_path: str, out_path: str, w: int, h: int, duration: float = 6.0):
@@ -251,7 +289,7 @@ def _pil_placeholder(query: str, w: int, h: int, img_path: str):
 
 # ── Master fetch function ────────────────────────────────────────────────────
 
-def fetch_broll(query: str, format_type: str, segment_index: int, duration: float = 6.0, narration: str = "") -> str:
+def fetch_broll(query: str, format_type: str, segment_index: int, duration: float = 6.0, narration: str = "", alt_queries: list[str] | None = None) -> str:
     """
     6-tier B-roll waterfall with Gemini Vision matching:
       1. Pexels video (ranked and validated via Gemini Vision API on thumbnails)
@@ -280,11 +318,19 @@ def fetch_broll(query: str, format_type: str, segment_index: int, duration: floa
     words         = query.split()
     fallback_query = " ".join(words[:2]) if len(words) > 2 else query
 
+    # Build list of queries to try (primary + alternatives + fallback)
+    queries_to_try = [query]
+    if alt_queries:
+        queries_to_try.extend([q for q in alt_queries if q != query])
+    queries_to_try.append(fallback_query)
+
     # ── Try Pexels with vision ranking ───────────────────────────────────────
-    print(f"[B-roll] Segment {segment_index}: searching Pexels for candidates of '{query}'…")
-    candidates = _pexels_candidates(query, orientation)
-    if not candidates:
-        candidates = _pexels_candidates(fallback_query, orientation)
+    candidates = []
+    for q in queries_to_try:
+        print(f"[B-roll] Segment {segment_index}: searching Pexels for '{q}'…")
+        candidates = _pexels_candidates(q, orientation)
+        if candidates:
+            break
 
     if candidates:
         thumbs = []
@@ -373,6 +419,39 @@ def fetch_broll(query: str, format_type: str, segment_index: int, duration: floa
                 print(f"[B-roll] Download or verification failed for {label}: {e}")
                 if os.path.exists(out_path):
                     os.remove(out_path)
+
+    # ── Try Wikimedia Commons video (science/education, CC-licensed) ──────────
+    for q in queries_to_try[:3]:  # Try top 3 queries
+        wiki_url = _wikimedia_video(q)
+        if wiki_url:
+            print(f"[B-roll] Downloading Wikimedia Commons video for '{q}'…")
+            try:
+                r = requests.get(wiki_url, stream=True, timeout=90,
+                                 headers={"User-Agent": "yt-auto/1.0"})
+                r.raise_for_status()
+                # Wikimedia videos may be webm, need to convert
+                temp_wiki = f"output/wiki_temp_{segment_index}.webm"
+                with open(temp_wiki, "wb") as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
+                if os.path.getsize(temp_wiki) > 10_000:
+                    # Convert webm to mp4
+                    cmd = [
+                        "ffmpeg", "-y", "-i", temp_wiki,
+                        "-c:v", "libx264", "-preset", "fast", "-crf", "23",
+                        "-pix_fmt", "yuv420p", "-an", out_path
+                    ]
+                    subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    os.remove(temp_wiki)
+                    if os.path.exists(out_path) and os.path.getsize(out_path) > 10_000:
+                        print(f"[B-roll] Wikimedia Commons video accepted for segment {segment_index}.")
+                        return out_path
+            except Exception as e:
+                print(f"[B-roll] Wikimedia download/convert failed: {e}")
+                for p in [temp_wiki, out_path]:
+                    if os.path.exists(p):
+                        os.remove(p)
 
     # ── Try image sources (all converted with Ken Burns) ─────────────────────
     print(f"[B-roll] Segment {segment_index}: trying image sources…")

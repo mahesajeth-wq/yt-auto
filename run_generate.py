@@ -77,7 +77,8 @@ def main():
                 args.format,
                 i,
                 duration=tts_durations[i] if tts_durations else 6.0,
-                narration=seg["narration"]
+                narration=seg["narration"],
+                alt_queries=seg.get("broll_queries")
             )
             for i, seg in enumerate(script["segments"])
         ]

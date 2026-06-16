@@ -2,9 +2,15 @@
 phase6_music.py — Procedural ambient background music generator.
 Generates calm chord-pad loops with a soft shaker pulse using pure numpy.
 No torch, no transformers, no model download, no OOM risk. Runs in <2s.
+
+If a FREESOUND_API_KEY is set, tries Freesound CC0 ambient tracks first,
+then falls back to the procedural generator on any failure.
 """
 import os
 import random
+import shutil
+import subprocess
+import tempfile
 import numpy as np
 import wave
 
@@ -52,11 +58,87 @@ def _shaker(n_samples, beat_samples):
     return track
 
 
+def _fetch_freesound_music(topic: str, duration_seconds: int) -> str | None:
+    """Try to download a CC0 ambient track from Freesound. Returns wav path or None."""
+    try:
+        import requests
+        from pipeline.config import FREESOUND_API_KEY
+    except ImportError:
+        return None
+    if not FREESOUND_API_KEY:
+        return None
+
+    search_url = "https://freesound.org/apiv2/search/text/"
+    queries = [f"{topic} ambient", "ambient electronic loop"]
+
+    for query in queries:
+        print(f"[Music] Searching Freesound for '{query}' ...")
+        params = {
+            "query": query,
+            "filter": f'duration:[{duration_seconds} TO {duration_seconds * 4}] license:"Creative Commons 0"',
+            "fields": "id,name,duration,previews",
+            "page_size": 5,
+            "token": FREESOUND_API_KEY,
+        }
+        try:
+            resp = requests.get(search_url, params=params, timeout=30)
+            resp.raise_for_status()
+            results = resp.json().get("results", [])
+        except Exception as exc:
+            print(f"[Music] Freesound search failed: {exc}")
+            continue
+
+        if not results:
+            print(f"[Music] No Freesound results for '{query}', trying next query...")
+            continue
+
+        pick = random.choice(results)
+        preview_url = pick.get("previews", {}).get("preview-hq-mp3")
+        if not preview_url:
+            print("[Music] Selected result has no HQ preview, skipping.")
+            continue
+
+        print(f"[Music] Downloading Freesound #{pick['id']}: {pick['name']} ({pick['duration']:.1f}s)")
+        tmpdir = tempfile.mkdtemp(prefix="freesound_")
+        tmp_mp3 = os.path.join(tmpdir, "temp.mp3")
+        tmp_wav = os.path.join(tmpdir, "temp.wav")
+        try:
+            dl = requests.get(preview_url, timeout=30)
+            dl.raise_for_status()
+            with open(tmp_mp3, "wb") as f:
+                f.write(dl.content)
+
+            subprocess.run(
+                ["ffmpeg", "-y", "-i", tmp_mp3, "-ar", "44100", "-ac", "1", tmp_wav],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True,
+            )
+            print("[Music] Freesound track converted to wav successfully.")
+            return tmp_wav
+        except Exception as exc:
+            print(f"[Music] Freesound download/convert failed: {exc}")
+            continue
+
+    return None
+
+
 def generate_music(topic: str, duration_seconds: int = 35) -> str:
     out_path = "output/music.wav"
     if os.path.exists(out_path) and os.path.getsize(out_path) > 1000:
         print("Background music already exists, skipping generation.")
         return out_path
+
+    # ── Try Freesound CC0 first ──────────────────────────────────────────────
+    try:
+        fs_wav = _fetch_freesound_music(topic, duration_seconds)
+        if fs_wav and os.path.exists(fs_wav) and os.path.getsize(fs_wav) > 1000:
+            os.makedirs("output", exist_ok=True)
+            shutil.move(fs_wav, out_path)
+            print(f"[Music] Using Freesound CC0 track → {out_path}")
+            return out_path
+    except Exception as exc:
+        print(f"[Music] Freesound attempt failed ({exc}), falling back to procedural.")
+
+    # ── Fallback: procedural ambient generation ──────────────────────────────
     print(f"Generating procedural ambient background music ({duration_seconds}s)...")
     os.makedirs("output", exist_ok=True)
 

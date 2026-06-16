@@ -5,7 +5,7 @@ from PIL import Image
 from pipeline.gemini import _post_with_rotation
 from pipeline.config import GEMINI_FLASH, GEMINI_API_BASE
 
-def _shrink(img_bytes: bytes, max_dim: int = 384) -> bytes:
+def _shrink(img_bytes: bytes, max_dim: int = 768) -> bytes:
     img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
     img.thumbnail((max_dim, max_dim))
     buf = io.BytesIO()
@@ -13,8 +13,8 @@ def _shrink(img_bytes: bytes, max_dim: int = 384) -> bytes:
     return buf.getvalue()
 
 def vision_rank_broll(thumbnails: list[bytes], narration: str, query: str) -> tuple[int | None, bool]:
-    """Returns (best_index, match_found). Empty/failed input -> (0, True) so the
-    pipeline degrades to old behavior (pick first) rather than hard-failing."""
+    """Returns (best_index, match_found). Empty/failed input -> (None, False) so the
+    pipeline continues the waterfall rather than silently accepting garbage."""
     if not thumbnails:
         return None, False
     parts = [{"text": (
@@ -41,5 +41,5 @@ def vision_rank_broll(thumbnails: list[bytes], narration: str, query: str) -> tu
             return None, False
         return idx, True
     except Exception as e:
-        print(f"[B-roll] Vision ranking failed: {e}. Degrading to first candidate.")
-        return 0, True
+        print(f"[B-roll] Vision ranking failed: {e}. Continuing waterfall…")
+        return None, False
