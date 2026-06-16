@@ -30,7 +30,7 @@ jobs:
       - name: Install Bebas Neue Font
         run: |
           mkdir -p ~/.local/share/fonts
-          wget -O ~/.local/share/fonts/BebasNeue-Regular.ttf https://github.com/dharmatype/Bebas-Neue/raw/master/fonts/BebasNeue-Regular.ttf
+          wget -O ~/.local/share/fonts/BebasNeue-Regular.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/bebasneue/BebasNeue-Regular.ttf
           fc-cache -fv
 
 
