@@ -82,8 +82,8 @@ def main():
                 print("Issues:")
                 for issue in issues:
                     print(f" - {issue}")
-            print("\n⚠️ Skipping false alarm and publishing anyway based on user directive.")
-            # sys.exit(1) # Removed to skip false alarms
+            print("\nFix the issues and regenerate the video before publishing.")
+            sys.exit(1)
         else:
             print(f"\n✅ Video PASSED Judge AI review! (Score: {score}/100)")
             print(f"Judge Comments: {reason}\n")
