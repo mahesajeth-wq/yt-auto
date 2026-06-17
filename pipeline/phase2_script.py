@@ -158,13 +158,18 @@ You MUST return your response ONLY as a raw JSON object with no markdown syntax.
 """
 
     print("Generating script content using Gemini...")
-    script_text = client.generate_text(prompt, use_grounding=False, temperature=0.8)
-    
-    try:
-        script = _robust_json_loads(script_text)
-    except Exception as e:
-        print(f"Error parsing script JSON: {e}. Raw script text: {script_text}")
-        raise RuntimeError("Failed to generate a valid script JSON from Gemini") from e
+    max_attempts = 3
+    script_text = ""
+    script = None
+    for attempt in range(max_attempts):
+        try:
+            script_text = client.generate_text(prompt, use_grounding=False, temperature=0.8)
+            script = _robust_json_loads(script_text)
+            break
+        except Exception as e:
+            print(f"Error parsing script JSON on attempt {attempt+1}: {e}. Raw script text: {script_text}")
+            if attempt == max_attempts - 1:
+                raise RuntimeError("Failed to generate a valid script JSON from Gemini after 3 attempts") from e
 
     if format_type == "short":
         script["segment_count"] = segment_count
