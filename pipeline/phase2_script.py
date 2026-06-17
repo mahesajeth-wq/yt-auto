@@ -58,7 +58,13 @@ CORRECT examples: "Stephen Hawking wheelchair smiling", "DNA double helix blue",
 "brain neurons firing", "atom particle collider", "coral reef fish colorful"
 
 WRONG examples: "visually jarring close-up of the topic", "macro b-roll of scientific
-element", "closing beautiful shot returning to start", "diagram concept visualization"
+element", "closing beautiful shot returning to start", "diagram concept visualization",
+"TMAO molecular structure" (too specific for stock footage), "chemical" (too ambiguous, returns factories)
+
+IMPORTANT B-ROLL RULES:
+- Stock video sites DO NOT HAVE specific molecules or rare deep-sea fish by name.
+- For chemicals or proteins, use terms like "abstract science background", "microscope biology animation", "glowing particles", or "fluid dynamics".
+- NEVER use the word "chemical" alone, as stock sites return industrial factories and smokestacks instead of biology. Use "chemistry laboratory" or "liquid mixture".
 
 For each segment, also provide a `broll_queries` array with 3-5 ALTERNATIVE search terms for the same visual concept. These should be synonyms, related concepts, or different angles on the same subject. The first entry should match `broll_query`.
 
@@ -129,7 +135,13 @@ CORRECT examples: "Stephen Hawking wheelchair smiling", "DNA double helix blue",
 "brain neurons firing", "atom particle collider", "coral reef fish colorful"
 
 WRONG examples: "visually jarring close-up of the topic", "macro b-roll of scientific
-element", "closing beautiful shot returning to start", "diagram concept visualization"
+element", "closing beautiful shot returning to start", "diagram concept visualization",
+"TMAO molecular structure" (too specific for stock footage), "chemical" (too ambiguous, returns factories)
+
+IMPORTANT B-ROLL RULES:
+- Stock video sites DO NOT HAVE specific molecules or rare deep-sea fish by name.
+- For chemicals or proteins, use terms like "abstract science background", "microscope biology animation", "glowing particles", or "fluid dynamics".
+- NEVER use the word "chemical" alone, as stock sites return industrial factories and smokestacks instead of biology. Use "chemistry laboratory" or "liquid mixture".
 
 For each segment, also provide a `broll_queries` array with 3-5 ALTERNATIVE search terms for the same visual concept. These should be synonyms, related concepts, or different angles on the same subject. The first entry should match `broll_query`.
 
