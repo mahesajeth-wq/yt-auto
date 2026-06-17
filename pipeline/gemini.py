@@ -8,6 +8,52 @@ from pipeline.config import (
     GEMINI_API_KEYS, GEMINI_FLASH, GEMINI_TTS_MODEL, GEMINI_API_BASE
 )
 
+import re as _re
+
+def _clean_json_output(raw: str) -> str:
+    """Strip markdown fences and sanitize control chars from Gemini JSON output."""
+    t = raw.strip()
+    # Remove code fences anywhere in the string (handles multiline responses)
+    t = _re.sub(r'^```(?:json)?\s*\n?', '', t, flags=_re.MULTILINE)
+    t = _re.sub(r'\n?```\s*$', '', t, flags=_re.MULTILINE)
+    t = t.strip()
+    # Extract outermost JSON object or array (handles preamble/postamble text)
+    obj = t.find('{'); arr = t.find('[')
+    if obj >= 0 and (arr < 0 or obj < arr):
+        end = t.rfind('}')
+        if end >= 0:
+            t = t[obj:end + 1]
+    elif arr >= 0:
+        end = t.rfind(']')
+        if end >= 0:
+            t = t[arr:end + 1]
+    return t
+
+def _robust_json_loads(text: str):
+    """Parse JSON with two fallback passes to handle Gemini quirks."""
+    import json as _json
+    cleaned = _clean_json_output(text)
+    # Pass 1: strict=False allows 0x00-0x1f control chars in string values
+    try:
+        return _json.loads(cleaned, strict=False)
+    except _json.JSONDecodeError:
+        pass
+    # Pass 2: escape any remaining bare control chars inside string values
+    fixed = []
+    in_str = False
+    esc = False
+    for ch in cleaned:
+        if esc:
+            fixed.append(ch); esc = False
+        elif ch == '\\':
+            fixed.append(ch); esc = True
+        elif ch == '"':
+            in_str = not in_str; fixed.append(ch)
+        elif in_str and ord(ch) < 0x20:
+            fixed.append('\\u{:04x}'.format(ord(ch)))
+        else:
+            fixed.append(ch)
+    return _json.loads(''.join(fixed))
 
 class TTSError(Exception):
     pass
@@ -232,13 +278,7 @@ class GeminiClient:
 
         resp = self._post(url, payload)
         text = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
-        # Strip any markdown fences Gemini sometimes adds
-        for fence in ("```json", "```"):
-            if text.startswith(fence):
-                text = text[len(fence):]
-        if text.endswith("```"):
-            text = text[:-3]
-        return text.strip()
+        return _clean_json_output(text)
 
     # ── Image generation (Pollinations – no key needed) ──────────────────────
 

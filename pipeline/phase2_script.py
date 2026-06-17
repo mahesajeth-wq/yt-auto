@@ -2,7 +2,7 @@ import json
 import datetime
 import random
 from pipeline.config import HOOK_PATTERNS
-from pipeline.gemini import GeminiClient
+from pipeline.gemini import GeminiClient, _robust_json_loads
 
 def get_next_weekday_2pm_ist_utc():
     # IST is UTC+5:30. 2:00 PM IST = 14:00 IST = 08:30 AM UTC.
@@ -27,6 +27,9 @@ def generate_script(topic: dict, format_type: str) -> dict:
     client = GeminiClient()
     
     if format_type == "short":
+        import random as _random
+        segment_count = _random.choices([4, 5, 6], weights=[15, 65, 20], k=1)[0]
+        
         hook_pattern = random.choice(HOOK_PATTERNS)
         hook_formatted = hook_pattern.format(
             subject=topic.get("topic", "science"),
@@ -69,6 +72,7 @@ You MUST return your response ONLY as a raw JSON object with no markdown syntax.
   "tags": ["8 to 12 relevant tags under 500 characters total"],
   "category_id": "27",
   "segments": [
+    // Provide exactly {segment_count} segments here.
     {{
       "id": 1,
       "narration": "opening shocking hook sentence - 8 words or less, massive information gap",
@@ -83,21 +87,9 @@ You MUST return your response ONLY as a raw JSON object with no markdown syntax.
       "duration_target": 6
     }},
     {{
-      "id": 3,
-      "narration": "Second crazy detail building mystery - 8 words or less",
-      "broll_query": "relativity space time fabric warp",
-      "duration_target": 7
-    }},
-    {{
-      "id": 4,
-      "narration": "Rewatch trigger referencing a hidden visual detail - 8 words or less",
-      "broll_query": "light speed particle beam physics",
-      "duration_target": 6
-    }},
-    {{
-      "id": 5,
-      "narration": "Payoff sentence wrapping up and looping seamlessly back into Segment 1's hook - 8 words or less",
-      "broll_query": "universe galaxy stars spiral",
+      "id": {segment_count},
+      "narration": "Final sentence that GRAMMATICALLY FLOWS INTO Segment 1's first sentence when read back-to-back — creating an audio loop the viewer doesn't register as a restart. Example pattern: if Segment 1 opens with 'A pistol shrimp creates a flash hotter than the sun', Segment {segment_count} should end with something like '...which is why nothing in the ocean is stranger than what you heard at the start — hotter than the sun.' The viewer loops before realising the video restarted.",
+      "broll_query": "nature extreme close-up slow motion",
       "duration_target": 6
     }}
   ],
@@ -108,14 +100,14 @@ You MUST return your response ONLY as a raw JSON object with no markdown syntax.
 For Segment 1 specifically:
 - `broll_query` MUST describe a high-motion, high-contrast, visually arresting shot (fast motion, bright colors, dramatic close-up) — this is the opening pattern-interrupt that determines whether viewers keep watching.
 
-For Segments 2-4:
+For Segments 2 to (n-2):
 - Frame facts with visual or scientific paradoxes (e.g., 'Something the size of a city that weighs more than the sun' or 'The man who failed entrance exams rewrote the universe').
 - Deliver the single most mind-bending scientific fact in Segment 2.
 - Introduce an open loop (a second mystery or surprise fact) in Segment 3 that builds tension towards the loop twist.
 
-For Segment 5 specifically:
+For the final segment (Segment {segment_count}) specifically:
 - Resolve all loops and design the final sentence to end on a transition that flows seamlessly back into Segment 1's hook narration.
-- Segment 5's final sentence should THEMATICALLY echo or re-contextualize the IDEA from Segment 1's hook — e.g. answer the question it posed, or reveal a twist that recasts it — WITHOUT repeating its exact wording. The goal is a satisfying "full circle" feeling on rewatch, not a verbatim repeat.
+- The final sentence should THEMATICALLY echo or re-contextualize the IDEA from Segment 1's hook — e.g. answer the question it posed, or reveal a twist that recasts it — WITHOUT repeating its exact wording. The goal is a satisfying "full circle" feeling on rewatch, not a verbatim repeat.
 """
     else:  # long-form
         prompt = f"""Generate a comprehensive 7-10 minute YouTube educational script on the topic: "{topic['topic']}".
@@ -169,10 +161,13 @@ You MUST return your response ONLY as a raw JSON object with no markdown syntax.
     script_text = client.generate_text(prompt, use_grounding=False, temperature=0.8)
     
     try:
-        script = json.loads(script_text, strict=False)
+        script = _robust_json_loads(script_text)
     except Exception as e:
         print(f"Error parsing script JSON: {e}. Raw script text: {script_text}")
         raise RuntimeError("Failed to generate a valid script JSON from Gemini") from e
+
+    if format_type == "short":
+        script["segment_count"] = segment_count
 
     # Add scheduling metadata for long form
     if format_type == "long":
@@ -193,7 +188,7 @@ If a claim is unverifiable, speculative, or false, mark `"verified": false`.
     verified_text = client.generate_text(verification_prompt, use_grounding=True, temperature=0.2)
     
     try:
-        verified_script = json.loads(verified_text, strict=False)
+        verified_script = _robust_json_loads(verified_text)
         script["segments"] = verified_script.get("segments", script["segments"])
     except Exception as e:
         print(f"Fact check parse failed ({e}), keeping original script with verified status = True.")
@@ -213,7 +208,7 @@ Return ONLY a raw JSON object for this segment with the updated "narration" and 
 """
             regen_text = client.generate_text(regen_prompt, use_grounding=True, temperature=0.3)
             try:
-                regen_seg = json.loads(regen_text, strict=False)
+                regen_seg = _robust_json_loads(regen_text)
                 seg["narration"] = regen_seg.get("narration", seg["narration"])
                 seg["verified"] = True
             except Exception as e:

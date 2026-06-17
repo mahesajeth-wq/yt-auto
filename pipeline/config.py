@@ -48,16 +48,32 @@ FPS                 = 30
 TOPIC_LOG_SIZE      = 90
 
 HOOK_PATTERNS = [
-    "Scientists are panicking over this {topic} discovery",
-    "Your entire understanding of {topic} is a complete lie",
-    "What they don't tell you about {topic} will bend your brain",
-    "This one bizarre detail about {topic} changes everything",
-    "The terrifying truth about {topic} that they hid from you",
-    "If you think {topic} is simple, you've been lied to",
-    "We just found something inside {topic} that shouldn't exist",
-    "This is the exact moment we realized {topic} is broken",
+    "The {topic} fact that breaks a rule you learned in school",
+    "In exactly 30 seconds you'll never see {topic} the same way",
+    "Scientists found something inside {topic} that shouldn't exist",
+    "The {topic} detail that 99% of people never notice — even experts",
+    "What {topic} does when no one is watching will disturb you",
+    "The one thing about {topic} that every textbook gets wrong",
+    "This single {topic} fact overturns 100 years of assumptions",
+    "You've seen {topic} your whole life. You've never actually seen it.",
 ]
 
+# 4 layout variants — rotated per video to avoid similarity-score flagging
+THUMBNAIL_LAYOUTS = [
+    "dark_top_bar",       # original: dark bar at top, yellow text centred
+    "centered_gradient",  # text centred on a dark-to-transparent gradient overlay
+    "bottom_third",       # text in lower third, full-bleed frame behind it
+    "split_left",         # dark left panel with text, right panel shows frame
+]
+
+# topic sub-cluster rotation for Natural World Mysteries channel
+NATURAL_WORLD_SUBCLUSTERS = [
+    "deep ocean and marine biology",
+    "forest ecosystems and plant behavior",
+    "extreme weather and atmospheric phenomena",
+    "geology ancient earth and extreme environments",
+    "wild animal behavior and survival strategies",
+]
 
 YT_CATEGORY_EDUCATION = "27"
 YT_CATEGORY_SCIENCE   = "28"
