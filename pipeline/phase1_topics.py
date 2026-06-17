@@ -41,7 +41,7 @@ Each object in the array must contain these exact fields:
     response_text = client.generate_text(prompt, use_grounding=True, temperature=0.7)
     
     try:
-        topics_list = json.loads(response_text)
+        topics_list = json.loads(response_text, strict=False)
         if not isinstance(topics_list, list):
             raise ValueError("Response is not a JSON list")
     except Exception as e:

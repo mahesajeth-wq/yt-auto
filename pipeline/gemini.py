@@ -216,13 +216,16 @@ class GeminiClient:
         max_tokens: int = 8192,
     ) -> str:
         url = f"{GEMINI_API_BASE}/models/{GEMINI_FLASH}:generateContent?key={{key}}"
+        gen_config: dict = {
+            "temperature": temperature,
+            "maxOutputTokens": max_tokens,
+        }
+        # JSON mode is incompatible with google_search grounding tool
+        if not use_grounding:
+            gen_config["responseMimeType"] = "application/json"
         payload: dict = {
             "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-            "generationConfig": {
-                "temperature": temperature,
-                "maxOutputTokens": max_tokens,
-                "responseMimeType": "application/json"
-            },
+            "generationConfig": gen_config,
         }
         if use_grounding:
             payload["tools"] = [{"google_search": {}}]

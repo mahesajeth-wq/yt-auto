@@ -169,7 +169,7 @@ You MUST return your response ONLY as a raw JSON object with no markdown syntax.
     script_text = client.generate_text(prompt, use_grounding=False, temperature=0.8)
     
     try:
-        script = json.loads(script_text)
+        script = json.loads(script_text, strict=False)
     except Exception as e:
         print(f"Error parsing script JSON: {e}. Raw script text: {script_text}")
         raise RuntimeError("Failed to generate a valid script JSON from Gemini") from e
@@ -193,7 +193,7 @@ If a claim is unverifiable, speculative, or false, mark `"verified": false`.
     verified_text = client.generate_text(verification_prompt, use_grounding=True, temperature=0.2)
     
     try:
-        verified_script = json.loads(verified_text)
+        verified_script = json.loads(verified_text, strict=False)
         script["segments"] = verified_script.get("segments", script["segments"])
     except Exception as e:
         print(f"Fact check parse failed ({e}), keeping original script with verified status = True.")
@@ -213,7 +213,7 @@ Return ONLY a raw JSON object for this segment with the updated "narration" and 
 """
             regen_text = client.generate_text(regen_prompt, use_grounding=True, temperature=0.3)
             try:
-                regen_seg = json.loads(regen_text)
+                regen_seg = json.loads(regen_text, strict=False)
                 seg["narration"] = regen_seg.get("narration", seg["narration"])
                 seg["verified"] = True
             except Exception as e:
