@@ -28,7 +28,8 @@ def _pexels_candidates(query: str, orientation: str, n: int = 8) -> list[dict]:
                 video_files.sort(key=lambda f: f.get("width", 0), reverse=True)
                 candidates.append({
                     "video_url": video_files[0]["link"],
-                    "thumb_url": image_url
+                    "thumb_url": image_url,
+                    "source": "Pexels"
                 })
         return candidates
     except Exception as e:
@@ -114,7 +115,8 @@ def _coverr_candidates(query: str, orientation: str, n: int = 5) -> list[dict]:
                     candidates.append({
                         "video_url": video_url,
                         "thumb_url": thumb,
-                        "is_vertical": is_vertical
+                        "is_vertical": is_vertical,
+                        "source": "Coverr"
                     })
         # Sort candidates to prefer the requested orientation
         if orientation == "portrait":
@@ -688,29 +690,38 @@ def fetch_broll(query: str, format_type: str, segment_index: int, duration: floa
 
     # Run Gemini Vision matching on candidates
     if candidates:
-        print(f"[B-roll] Segment {segment_index}: Ranking {len(candidates)} candidates from: {', '.join(set(c['source'] for c in candidates))}…")
+        print(f"[B-roll] Segment {segment_index}: Ranking {len(candidates)} candidates from: {', '.join(set(c.get('source', 'Unknown') for c in candidates))}…")
         thumbs = []
+        valid_candidates = []
         for idx, cand in enumerate(candidates):
             try:
                 r_thumb = requests.get(cand["thumb_url"], timeout=15)
                 r_thumb.raise_for_status()
+                from PIL import Image
+                import io
+                Image.open(io.BytesIO(r_thumb.content)).verify()
+                
                 thumbs.append(r_thumb.content)
+                valid_candidates.append(cand)
             except Exception as e:
-                print(f"[B-roll] Failed to download thumbnail {idx} from {cand['source']}: {e}")
-                thumbs.append(b"")
+                print(f"[B-roll] Failed/invalid thumbnail {idx} from {cand.get('source', 'Unknown')}: {e}")
 
-        from pipeline.vision_match import vision_rank_broll
-        best_idx, match_found = vision_rank_broll(thumbs, narration, query)
+        if valid_candidates:
+            print(f"[B-roll] Segment {segment_index}: Ranking {len(valid_candidates)} candidates from: {', '.join(set(c.get('source', 'Unknown') for c in valid_candidates))}…")
+            from pipeline.vision_match import vision_rank_broll
+            best_idx, match_found = vision_rank_broll(thumbs, narration, query)
 
-        if match_found and best_idx is not None and best_idx < len(candidates):
-            chosen = candidates[best_idx]
-            print(f"[B-roll] Winner chosen! Source: {chosen['source']} (Index: {best_idx}). Downloading video…")
-            if _download_video_robust(chosen["video_url"], out_path, segment_index):
-                if used_urls is not None:
-                    used_urls.add(chosen["video_url"])
-                return out_path
+            if match_found and best_idx is not None and best_idx < len(valid_candidates):
+                chosen = valid_candidates[best_idx]
+                print(f"[B-roll] Winner chosen! Source: {chosen.get('source', 'Unknown')} (Index: {best_idx}). Downloading video…")
+                if _download_video_robust(chosen["video_url"], out_path, segment_index):
+                    if used_urls is not None:
+                        used_urls.add(chosen["video_url"])
+                    return out_path
+            else:
+                print(f"[B-roll] None of the {len(valid_candidates)} candidates passed strict Vision Match.")
         else:
-            print(f"[B-roll] None of the {len(candidates)} candidates passed strict Vision Match.")
+            print(f"[B-roll] No candidates with valid thumbnails for Segment {segment_index}.")
 
     # ── Fallback 1: Single Frame fallback search on other videos waterfall ─────────────────
     print(f"[B-roll] Segment {segment_index}: falling back to single-frame waterfall search...")
