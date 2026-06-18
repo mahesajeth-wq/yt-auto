@@ -25,6 +25,7 @@ PEXELS_API_KEY   = os.environ.get("PEXELS_API_KEY", "")
 PIXABAY_API_KEY  = os.environ.get("PIXABAY_API_KEY", "")
 COVERR_API_KEY   = os.environ.get("COVERR_API_KEY", "")   # free at coverr.co/developers
 NASA_API_KEY     = os.environ.get("NASA_API_KEY", "DEMO_KEY")  # free at api.nasa.gov
+KLIPY_API_KEY    = os.environ.get("KLIPY_API_KEY", "")
 FREESOUND_API_KEY = os.environ.get("FREESOUND_API_KEY", "")
 
 # ── YouTube OAuth ────────────────────────────────────────────────────────────
