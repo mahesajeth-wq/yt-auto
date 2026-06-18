@@ -67,13 +67,13 @@ THUMBNAIL_LAYOUTS = [
     "split_left",         # dark left panel with text, right panel shows frame
 ]
 
-# topic sub-cluster rotation for Natural World Mysteries channel
-NATURAL_WORLD_SUBCLUSTERS = [
-    "deep ocean and marine biology",
-    "forest ecosystems and plant behavior",
-    "extreme weather and atmospheric phenomena",
-    "geology ancient earth and extreme environments",
-    "wild animal behavior and survival strategies",
+# topic sub-cluster rotation for Science and Technology channel
+SCIENCE_SUBCLUSTERS = [
+    "space exploration and astrophysics",
+    "physics and quantum mechanics mysteries",
+    "advanced chemistry and materials science",
+    "biotechnology and genetic engineering",
+    "future technology and computing breakthroughs",
 ]
 
 YT_CATEGORY_EDUCATION = "27"

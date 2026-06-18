@@ -1,6 +1,6 @@
 import os
 import json
-from pipeline.config import TOPIC_LOG_SIZE, NATURAL_WORLD_SUBCLUSTERS
+from pipeline.config import TOPIC_LOG_SIZE, SCIENCE_SUBCLUSTERS
 from pipeline.gemini import GeminiClient, _robust_json_loads
 
 def select_topic(format_type: str) -> dict:
@@ -23,22 +23,21 @@ def select_topic(format_type: str) -> dict:
     call_count += 1
 
     # ── 2. Determine subcluster + evergreen vs trending ──────────────────────
-    current_subcluster = NATURAL_WORLD_SUBCLUSTERS[subcluster_idx % len(NATURAL_WORLD_SUBCLUSTERS)]
+    current_subcluster = SCIENCE_SUBCLUSTERS[subcluster_idx % len(SCIENCE_SUBCLUSTERS)]
     is_trending = (call_count % 5 == 0)   # every 5th call = trending topic
 
     if is_trending:
         topic_instruction = (
             f"Generate 5 TRENDING topics about {current_subcluster} "
-            f"that are currently in the science news this week. "
-            f"Frame each as a recent discovery or finding that most people haven't heard yet."
+            f"that are currently in the science and tech news this week. "
+            f"Frame each as a recent discovery, breakthrough, or research finding that most people haven't heard yet."
         )
     else:
         topic_instruction = (
             f"Generate 5 EVERGREEN topics about {current_subcluster}. "
-            f"Each must reveal a bizarre, counterintuitive, or little-known fact "
-            f"that educated adults don't know. Frame as 'What most people don't know about X' "
-            f"or 'The hidden truth about Y'. "
-            f"Every topic MUST name a specific number, species, mechanism, or place — "
+            f"Each must reveal a bizarre, counterintuitive, or little-known science fact "
+            f"that educated adults don't know. Frame as 'What if X happened' or 'How Y actually works'. "
+            f"Every topic MUST name a specific mechanism, theory, machine, or phenomenon — "
             f"NOT a vague 'scientists are surprised' hook."
         )
 
@@ -50,12 +49,12 @@ Sub-cluster focus for this batch: {current_subcluster}
 CRITICAL: Do NOT suggest any topic similar to these recently published topics:
 {json.dumps(recent_topics, indent=2)}
 
-AVOID: pet animals, compilations, human psychology, AI, technology, space (those are Channel 1).
-FOCUS: the natural world — oceans, forests, weather, geology, wild species.
+AVOID: Oceans, marine biology, forests, animal behavior, weather, geology (those are Channel 2 Nature).
+FOCUS: Science and technology — space, quantum mechanics, future computing, physics, biotech, advanced chemistry, engineering.
 
 Return ONLY a raw JSON array of objects. No markdown, no preamble.
 Each object must have exactly these fields:
-- "topic": specific subject with a named fact, species, or number (e.g. "The pistol shrimp produces a flash hotter than the sun's surface")
+- "topic": specific subject with a named fact, theory, or mechanism (e.g. "Quantum entanglement enables faster than light simulation without moving particles")
 - "short_hook": opening question or statement, 8 words or less, creates a strong information gap
 - "hook_type": one of "curiosity_gap", "contrarian", "time_pressure", "self_identification", "narrative_pull"
 - "for_format": "short", "long", or "both"
@@ -74,8 +73,8 @@ Each object must have exactly these fields:
         print(f"Error parsing topics: {e}")
         topics_list = [
             {
-                "topic": "The immortal jellyfish that resets its own age",
-                "short_hook": "One creature actually cheats death.",
+                "topic": "Why quantum computers don't melt at absolute zero",
+                "short_hook": "How quantum computers beat the heat.",
                 "hook_type": "curiosity_gap",
                 "for_format": "both",
                 "subcluster": current_subcluster
@@ -97,7 +96,7 @@ Each object must have exactly these fields:
     # ── 5. Persist state ──────────────────────────────────────────────────────
     published.append(selected_topic["topic"])
     published = published[-TOPIC_LOG_SIZE:]
-    next_subcluster_idx = (subcluster_idx + 1) % len(NATURAL_WORLD_SUBCLUSTERS)
+    next_subcluster_idx = (subcluster_idx + 1) % len(SCIENCE_SUBCLUSTERS)
 
     with open(topic_log_path, "w") as f:
         json.dump({
