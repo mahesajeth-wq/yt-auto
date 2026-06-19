@@ -6,13 +6,14 @@ import os
 # Multiple keys from the SAME account share the same daily quota but help
 # with per-minute rate limits (RPM throttling).
 def _load_keys() -> list[str]:
+    keys: list[str] = []
+    single = os.environ.get("GEMINI_API_KEY", "").strip()
+    if single:
+        keys.append(single)
     multi = os.environ.get("GEMINI_API_KEYS", "").strip()
     if multi:
-        keys = [k.strip() for k in multi.split(",") if k.strip()]
-        if keys:
-            return keys
-    single = os.environ.get("GEMINI_API_KEY", "").strip()
-    return [single] if single else []
+        keys.extend(k.strip() for k in multi.split(",") if k.strip())
+    return list(dict.fromkeys(keys))
 
 GEMINI_API_KEYS: list[str] = _load_keys()
 GEMINI_API_KEY: str = GEMINI_API_KEYS[0] if GEMINI_API_KEYS else ""
