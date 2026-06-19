@@ -69,12 +69,17 @@ jobs:
         run: |
           for attempt in 1 2; do
             echo "Generate attempt ${attempt}/2"
-            if timeout 32m python run_generate.py --format short; then
-              exit 0
-            fi
+            timeout 32m python run_generate.py --format short && exit 0
             code=$?
-            echo "Generate attempt ${attempt} failed or timed out with exit ${code}"
-            sleep 30
+            if [ "$code" -eq 124 ]; then
+              echo "Generate attempt ${attempt} timed out"
+            else
+              echo "Generate attempt ${attempt} failed with exit ${code}"
+            fi
+            if [ "$attempt" -eq 1 ]; then
+              echo "Waiting 16 minutes before retry to let free API cooldowns clear"
+              sleep 960
+            fi
           done
           exit 1
 

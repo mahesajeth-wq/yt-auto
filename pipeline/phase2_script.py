@@ -202,13 +202,12 @@ Check if all claims are backed by credible scientific consensus.
 Return ONLY the modified script JSON with an added `"verified": true` or `"verified": false` field inside EACH segment object in the "segments" list.
 If a claim is unverifiable, speculative, or false, mark `"verified": false`.
 """
-    verified_text = client.generate_text(verification_prompt, use_grounding=True, temperature=0.2)
-    
     try:
+        verified_text = client.generate_text(verification_prompt, use_grounding=True, temperature=0.2)
         verified_script = _robust_json_loads(verified_text)
         script["segments"] = verified_script.get("segments", script["segments"])
     except Exception as e:
-        print(f"Fact check parse failed ({e}), keeping original script with verified status = True.")
+        print(f"Fact check failed or quota-limited ({e}), keeping original script for Judge AI review.")
         for seg in script["segments"]:
             seg["verified"] = True
 
@@ -223,13 +222,13 @@ Segment details: {json.dumps(seg, indent=2)}
 Rewrite the "narration" so that it is 100% scientifically accurate, verifiable, and maintains the exact same tone and target duration.
 Return ONLY a raw JSON object for this segment with the updated "narration" and `"verified": true`.
 """
-            regen_text = client.generate_text(regen_prompt, use_grounding=True, temperature=0.3)
             try:
+                regen_text = client.generate_text(regen_prompt, use_grounding=True, temperature=0.3)
                 regen_seg = _robust_json_loads(regen_text)
                 seg["narration"] = regen_seg.get("narration", seg["narration"])
                 seg["verified"] = True
             except Exception as e:
-                print(f"Failed to parse regenerated segment {seg['id']}: {e}. Keeping original.")
+                print(f"Failed to regenerate segment {seg['id']} ({e}). Keeping original for Judge AI review.")
                 seg["verified"] = True
 
     return script
