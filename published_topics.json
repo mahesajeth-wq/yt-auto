@@ -2,8 +2,9 @@
   "topics": [
     "How Hawking radiation means black holes are not eternal, slowly evaporating over cosmic timescales.",
     "How the act of quantum measurement *collapses* a particle's wave function, thereby creating its observed reality.",
-    "How the quantum phenomenon of **Cooper pairs** allows superconductors to achieve perfect electrical conductivity with zero resistance by overcoming electron scattering."
+    "How the quantum phenomenon of **Cooper pairs** allows superconductors to achieve perfect electrical conductivity with zero resistance by overcoming electron scattering.",
+    "How gene drive actually works, forcing a specific genetic trait to spread through an entire wild population in just a few generations, potentially altering ecosystems irreversibly."
   ],
-  "subcluster_idx": 3,
-  "call_count": 3
+  "subcluster_idx": 4,
+  "call_count": 4
 }
