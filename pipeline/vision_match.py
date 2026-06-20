@@ -19,11 +19,10 @@ def vision_rank_broll(
 ) -> tuple[int | None, bool]:
     """
     Scores candidate B-roll thumbnails against the EXACT narration sentence.
-    Strict mode: rejects generic stock clips, symbolic stand-ins, and
-    anything that doesn't specifically represent the concept in the narration.
+    Ranks candidates by semantic fit, not first-provider wins.
     Returns (best_index, match_found).
-    match_found=False means caller must continue the waterfall — do NOT
-    silently accept a bad clip.
+    match_found=True means the best available candidate is worth using;
+    final Judge AI can still reject/repair the assembled segment later.
     """
     if not thumbnails:
         return None, False
@@ -36,27 +35,29 @@ def vision_rank_broll(
             f'SEARCH QUERY used: "{query}"\n\n'
             f'You are evaluating {len(thumbnails)} candidate B-roll thumbnail(s) '
             f'(indexed 0 to {len(thumbnails) - 1}) for the above narration.\n\n'
-            f'STRICT SCORING RULES — read carefully:\n'
+            f'SCORING RULES — read carefully:\n'
             f'1. The clip must SPECIFICALLY represent the concept, creature, '
             f'phenomenon, or place named in the narration. A vague thematic '
-            f'connection is NOT enough.\n'
-            f'2. REJECT any clip that shows:\n'
+            f'connection scores low.\n'
+            f'2. Score every candidate from 0-100:\n'
+            f'   - 90-100: exact subject or highly specific real-world match\n'
+            f'   - 75-89: strong contextual match, likely viewer understands immediately\n'
+            f'   - 55-74: usable fallback, related but not exact\n'
+            f'   - 0-54: bad mismatch or generic filler\n'
+            f'3. Penalize clips showing:\n'
             f'   - Generic office workers, handshakes, or people at computers\n'
             f'   - Abstract light effects, bokeh, or undefined particle animations\n'
             f'   - A generic human doing an unrelated activity\n'
             f'   - Any scene that could belong to a completely different video topic\n'
-            f'3. ACCEPT only if the clip would make a viewer think "yes, this is '
-            f'exactly what the voiceover is describing right now."\n'
-            f'4. If multiple candidates pass, pick the one with the closest '
-            f'visual match to the SPECIFIC subject of the narration.\n'
-            f'5. If NO candidate passes the strict test above, return '
-            f'match_found=false.\n\n'
+            f'4. Pick the highest-scoring candidate even when imperfect, so the pipeline can use the best available asset from all providers.\n'
+            f'5. Set match_found=false only when the best candidate scores below 55.\n\n'
             f'Return ONLY valid JSON (no markdown):\n'
             f'{{"best_index": <int or null>, '
             f'"match_found": <bool>, '
             f'"confidence": <0-100 int>, '
+            f'"candidate_scores": [<0-100 int for each candidate>], '
             f'"reject_reason": "<why rejected, or empty string if accepted>"}}\n\n'
-            f'Set match_found=false if confidence < 65.'
+            f'Set match_found=true if confidence >= 55. Still explain weaknesses in reject_reason if confidence < 75.'
         )
     }]
 
@@ -85,18 +86,22 @@ def vision_rank_broll(
         idx        = data.get("best_index")
         found      = bool(data.get("match_found", False))
         confidence = int(data.get("confidence", 0))
+        scores     = data.get("candidate_scores", [])
         reason     = data.get("reject_reason", "")
 
+        if isinstance(scores, list) and scores:
+            print(f"[VisionMatch] Candidate scores: {scores}")
         if reason:
-            print(f"[VisionMatch] Rejected: {reason} (confidence={confidence})")
+            print(f"[VisionMatch] Note: {reason} (confidence={confidence})")
 
         if not (found and isinstance(idx, int) and 0 <= idx < len(thumbnails)):
             return None, False
-        if confidence < 65:
-            print(f"[VisionMatch] Low confidence ({confidence}) — rejecting.")
+        if confidence < 55:
+            print(f"[VisionMatch] Very low confidence ({confidence}) — rejecting.")
             return None, False
 
-        print(f"[VisionMatch] Accepted index {idx} (confidence={confidence})")
+        quality = "strong" if confidence >= 75 else "fallback"
+        print(f"[VisionMatch] Accepted {quality} index {idx} (confidence={confidence})")
         return idx, True
 
     except Exception as e:
