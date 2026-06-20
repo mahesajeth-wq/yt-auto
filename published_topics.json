@@ -3,8 +3,9 @@
     "How Hawking radiation means black holes are not eternal, slowly evaporating over cosmic timescales.",
     "How the act of quantum measurement *collapses* a particle's wave function, thereby creating its observed reality.",
     "How the quantum phenomenon of **Cooper pairs** allows superconductors to achieve perfect electrical conductivity with zero resistance by overcoming electron scattering.",
-    "How gene drive actually works, forcing a specific genetic trait to spread through an entire wild population in just a few generations, potentially altering ecosystems irreversibly."
+    "How gene drive actually works, forcing a specific genetic trait to spread through an entire wild population in just a few generations, potentially altering ecosystems irreversibly.",
+    "Quantum error correction achieves 'below-threshold' performance, where increasing physical qubits reduces logical error rates, moving quantum computing from physics research to engineering discipline."
   ],
-  "subcluster_idx": 4,
-  "call_count": 4
+  "subcluster_idx": 0,
+  "call_count": 5
 }
