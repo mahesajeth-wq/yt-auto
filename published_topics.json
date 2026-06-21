@@ -5,8 +5,9 @@
     "How the quantum phenomenon of **Cooper pairs** allows superconductors to achieve perfect electrical conductivity with zero resistance by overcoming electron scattering.",
     "How gene drive actually works, forcing a specific genetic trait to spread through an entire wild population in just a few generations, potentially altering ecosystems irreversibly.",
     "Quantum error correction achieves 'below-threshold' performance, where increasing physical qubits reduces logical error rates, moving quantum computing from physics research to engineering discipline.",
-    "How gravitational time dilation makes observers near a black hole perceive time as stopping for distant objects, a bizarre consequence of extreme gravity."
+    "How gravitational time dilation makes observers near a black hole perceive time as stopping for distant objects, a bizarre consequence of extreme gravity.",
+    "How quantum tunneling enables stars like our Sun to burn for billions of years, despite not having enough core temperature and pressure to overcome the electromagnetic repulsion between atomic nuclei."
   ],
-  "subcluster_idx": 1,
-  "call_count": 6
+  "subcluster_idx": 2,
+  "call_count": 7
 }
