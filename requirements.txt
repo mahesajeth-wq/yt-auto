@@ -7,3 +7,5 @@ numpy>=1.26.0
 pillow>=10.3.0
 soundfile>=0.12.1
 kokoro>=0.3.0
+
+dailymotion

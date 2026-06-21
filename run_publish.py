@@ -100,6 +100,17 @@ def main():
         video_id = phase9.upload_to_youtube(video_path, thumbnail_path, metadata)
         print(f"\n✅ Successfully published to YouTube! Video ID: {video_id}")
         print(f"Direct Link: https://www.youtube.com/watch?v={video_id}")
+        
+        # --- DAILYMOTION UPLOAD ---
+        try:
+            print("\n🚀 Initiating Dailymotion upload...")
+            import importlib
+            phase10 = importlib.import_module("pipeline.phase10_dailymotion")
+            dm_id = phase10.upload_to_dailymotion(video_path, metadata)
+            if dm_id:
+                print(f"✅ Successfully published to Dailymotion! Video ID: {dm_id}")
+        except Exception as dm_err:
+            print(f"⚠️ Warning: Dailymotion upload encountered an error: {dm_err}")
     except google.auth.exceptions.RefreshError as ref_err:
         print("\n❌ Authentication Error: Refresh token may have expired or is invalid.")
         print("Re-generate your refresh token at: https://developers.google.com/oauthplayground")
