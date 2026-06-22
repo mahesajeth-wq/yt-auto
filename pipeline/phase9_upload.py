@@ -17,7 +17,7 @@ def upload_to_youtube(video_path: str, thumbnail_path: str, metadata: dict) -> s
         token_uri="https://oauth2.googleapis.com/token",
         client_id=YT_CLIENT_ID,
         client_secret=YT_CLIENT_SECRET,
-        scopes=["https://www.googleapis.com/auth/youtube"]
+        scopes=["https://www.googleapis.com/auth/youtube.upload"]
     )
     
     # Refresh the credentials
