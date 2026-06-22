@@ -39,6 +39,13 @@ def _md5(s: str) -> str:
     return hashlib.md5(s.encode("utf-8")).hexdigest()
 
 
+def _hash_stretch(password: str, salt: str, iterations: int = 128) -> str:
+    h = _md5(salt + password)
+    for _ in range(iterations):
+        h = _md5(h + password)
+    return h
+
+
 def _login(session: requests.Session) -> dict:
     """Authenticate and return user info dict with upload endpoint."""
 
@@ -50,13 +57,17 @@ def _login(session: requests.Session) -> dict:
         headers=HEADERS_AUTH,
     )
     r.raise_for_status()
-    salts = r.json()
-    salt, salt2, uid = salts["salt"], salts["salt2"], salts["uid"]
+    salts_data = r.json()
+    salts_list = salts_data.get("data", {}).get("salts", [])
+    if len(salts_list) < 3:
+        raise ValueError(f"[Rumble] Failed to get valid salts: {salts_data}")
+    salt, uid, salt2 = salts_list[0], salts_list[1], salts_list[2]
     print(f"[Rumble] Got salts for uid={uid}")
 
     # Step 2 — hash password
-    hash1 = _md5(_md5(RUMBLE_PASSWORD) + salt)
-    hash2 = _md5(hash1 + salt2)
+    h_stretch = _hash_stretch(RUMBLE_PASSWORD, salt, 128)
+    hash1 = _md5(h_stretch + uid)
+    hash2 = _hash_stretch(RUMBLE_PASSWORD, salt2, 128)
     pw_field = f"{hash1},{hash2},{uid}"
 
     # Step 3 — login
