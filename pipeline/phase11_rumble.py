@@ -137,13 +137,23 @@ def _upload_file(session: requests.Session, endpoint: str, video_path: str) -> s
 
     time_start = int(time.time() * 1000)
 
-    with open(video_path, "rb") as f:
+    from curl_cffi import CurlMime
+    mp = CurlMime()
+    mp.addpart(
+        name="Filedata",
+        content_type="video/mp4",
+        filename=file_name,
+        local_path=video_path
+    )
+    try:
         r = session.post(
             f"{endpoint}/upload.php?api=1.3",
-            files={"Filedata": (file_name, f, "video/mp4")},
+            multipart=mp,
             headers=HEADERS_MAIN,
         )
-    r.raise_for_status()
+        r.raise_for_status()
+    finally:
+        mp.close()
 
     time_end = int(time.time() * 1000)
     temp_filename = r.text.strip()
