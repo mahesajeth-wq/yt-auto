@@ -10,8 +10,9 @@
     "How negative refractive index metamaterials actually work, bending light in the 'wrong' direction to make objects appear closer or even invisible.",
     "How **CRISPR-Cas surveillance systems** can detect diseases with single-molecule precision, turning a gene-editing tool into a diagnostic powerhouse.",
     "Topological qubits achieve enhanced fault tolerance through 'braiding' Majorana zero modes, offering inherent error resistance for quantum computing.",
-    "How **Hubble's Law** means the expansion of space can make galaxies permanently unreachable, even if we traveled at light speed."
+    "How **Hubble's Law** means the expansion of space can make galaxies permanently unreachable, even if we traveled at light speed.",
+    "How *gravitational lensing* reveals the invisible universe, where dark matter bends light but isn't seen."
   ],
-  "subcluster_idx": 1,
-  "call_count": 11
+  "subcluster_idx": 2,
+  "call_count": 12
 }
