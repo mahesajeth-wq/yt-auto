@@ -26,12 +26,12 @@ jobs:
             https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" \
             | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
           sudo apt-get update && sudo apt-get install -y cloudflare-warp
-          warp-cli mode proxy
-          warp-cli proxy port 40000
-          warp-cli registration new
-          warp-cli connect
+          warp-cli --accept-tos mode proxy
+          warp-cli --accept-tos proxy port 40000
+          warp-cli --accept-tos registration new
+          warp-cli --accept-tos connect
           sleep 5
-          warp-cli status
+          warp-cli --accept-tos status
 
       - name: Verify WARP exit IP
         run: |
