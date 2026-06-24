@@ -35,7 +35,7 @@ jobs:
 
       - name: Verify WARP exit IP
         run: |
-          IP_INFO=$(curl -s https://ipinfo.io/json)
+          IP_INFO=$(curl -x socks5h://127.0.0.1:40000 -s https://ipinfo.io/json)
           echo "$IP_INFO"
           echo "$IP_INFO" | grep -q "Cloudflare" \
             && echo "WARP active — Cloudflare IP confirmed" \
