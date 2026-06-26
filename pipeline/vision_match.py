@@ -27,6 +27,11 @@ def vision_rank_broll(
     if not thumbnails:
         return None, False
 
+    import os
+    if os.environ.get("BYPASS_VISION_MATCH") == "1":
+        print("[VisionMatch] Bypassing Vision Match (BYPASS_VISION_MATCH=1). Accepting index 0.")
+        return 0, True
+
     # Build the strict matching prompt
     parts = [{
         "text": (

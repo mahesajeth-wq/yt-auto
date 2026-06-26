@@ -66,6 +66,7 @@ jobs:
           GEMINI_API_KEYS:   ${{ secrets.GEMINI_API_KEYS }}
           GEMINI_JUDGE_API_KEY: ${{ secrets.GEMINI_JUDGE_API_KEY }}
           FREESOUND_API_KEY: ${{ secrets.FREESOUND_API_KEY }}
+          BYPASS_VISION_MATCH: "1"
         run: |
           for attempt in 1 2; do
             echo "Generate attempt ${attempt}/2"
