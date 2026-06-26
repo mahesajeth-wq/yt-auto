@@ -163,6 +163,7 @@ class JudgeClient:
         raise RuntimeError("Judge AI: all Gemini keys exhausted during video review.") from last_error
 
     def _review_video_with_key(self, video_path: str, metadata: dict, api_key: str) -> dict:
+        slot = _shared_pool._keys.index(api_key) + 1
         file_name = None
         try:
             # 1. Upload video
