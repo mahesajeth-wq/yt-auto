@@ -20,8 +20,9 @@
     "How **shape memory alloys** actually work, where metals \"remember\" their original shape and return to it upon heating, even after severe deformation, due to a reversible solid-state phase change called **martensitic transformation**.",
     "How **synthetic gene circuits** enable living bacteria to perform complex computations, turning cells into miniature, programmable biological computers.",
     "Recent breakthroughs in photonic computing chips allow light to perform complex calculations, drastically accelerating AI and reducing energy consumption.",
-    "How the **Lense-Thirring effect** means rapidly spinning neutron stars literally drag spacetime around them."
+    "How the **Lense-Thirring effect** means rapidly spinning neutron stars literally drag spacetime around them.",
+    "How the Casimir effect reveals that even empty space is teeming with virtual particles, which can exert a measurable force on parallel plates."
   ],
-  "subcluster_idx": 1,
-  "call_count": 21
+  "subcluster_idx": 2,
+  "call_count": 22
 }
