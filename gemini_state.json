@@ -15,22 +15,22 @@
     "status": "daily_exhausted"
   },
   "3": {
-    "cooldown_until": 0.0,
-    "failures": 0,
-    "status": "active"
-  },
-  "4": {
-    "cooldown_until": 0.0,
+    "cooldown_until": 1782720000.0,
     "failures": 4,
     "status": "daily_exhausted"
   },
+  "4": {
+    "cooldown_until": 1782720000.0,
+    "failures": 5,
+    "status": "daily_exhausted"
+  },
   "5": {
-    "cooldown_until": 0.0,
+    "cooldown_until": 1782720000.0,
     "failures": 4,
     "status": "daily_exhausted"
   },
   "6": {
-    "cooldown_until": 0.0,
+    "cooldown_until": 1782720000.0,
     "failures": 4,
     "status": "daily_exhausted"
   },
