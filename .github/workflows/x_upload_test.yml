@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install --upgrade twikit yt-dlp
+          pip install --upgrade twikit yt-dlp requests
 
       - name: Download and upload
         env:
@@ -36,21 +36,67 @@ jobs:
           X_PASSWORD: ${{ secrets.X_PASSWORD_CH1 }}
           YT_URL: ${{ secrets.LAST_YT_URL_CH1 }}
           COOKIE_FILE: cookies_ch1.json
+          TARGET_REPO: yt-auto
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python -c '
-          import os, asyncio, subprocess
-          from twikit import Client
+          import os, asyncio, subprocess, requests, zipfile, io
           async def main():
               username = os.environ.get("X_USERNAME", "").strip()
               email = os.environ.get("X_EMAIL", "").strip()
               password = os.environ.get("X_PASSWORD", "").strip()
               yt_url = os.environ.get("YT_URL", "").strip()
               cookie_file = os.environ.get("COOKIE_FILE", "").strip()
-              if not yt_url or not username or not password or not email:
-                  print("Missing credentials or URL. Skipping.")
+              target_repo = os.environ.get("TARGET_REPO", "").strip()
+              token = os.environ.get("GITHUB_TOKEN", "").strip()
+              
+              if not username or not password or not email:
+                  print("Missing X credentials. Skipping.")
                   return
-              print(f"Downloading: {yt_url}")
-              subprocess.run(["yt-dlp", "-o", "output.mp4", "-f", "mp4", yt_url], check=True)
+
+              downloaded = False
+              # Method 1: Try downloading artifact from GitHub
+              if target_repo:
+                  print(f"Attempting to download latest artifact from {target_repo}...")
+                  headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github.v3+json"}
+                  try:
+                      r = requests.get(f"https://api.github.com/repos/gurination1/{target_repo}/actions/runs?status=success&per_page=1", headers=headers, timeout=20)
+                      r.raise_for_status()
+                      runs = r.json().get("workflow_runs", [])
+                      if runs:
+                          run_id = runs[0]["id"]
+                          r_art = requests.get(f"https://api.github.com/repos/gurination1/{target_repo}/actions/runs/{run_id}/artifacts", headers=headers, timeout=20)
+                          r_art.raise_for_status()
+                          arts = r_art.json().get("artifacts", [])
+                          if arts:
+                              art = arts[0]
+                              dl_url = art["archive_download_url"]
+                              print(f"Downloading artifact: {art[\"name\"]} ...")
+                              r_dl = requests.get(dl_url, headers=headers, timeout=60)
+                              r_dl.raise_for_status()
+                              z = zipfile.ZipFile(io.BytesIO(r_dl.content))
+                              z.extractall(".")
+                              mp4_files = [f for f in os.listdir(".") if f.endswith(".mp4")]
+                              if mp4_files:
+                                  os.rename(mp4_files[0], "output.mp4")
+                                  print(f"Artifact video extracted successfully: {mp4_files[0]}")
+                                  downloaded = True
+                  except Exception as e:
+                      print(f"Artifact download failed: {e}. Falling back to yt-dlp...")
+
+              # Method 2: Fallback to yt-dlp if artifact not downloaded
+              if not downloaded:
+                  if not yt_url:
+                      print("No YT URL available and artifact download failed. Cannot proceed.")
+                      return
+                  print(f"Downloading from YouTube: {yt_url}")
+                  try:
+                      subprocess.run(["yt-dlp", "-o", "output.mp4", "-f", "mp4", "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", yt_url], check=True)
+                      downloaded = True
+                  except Exception as e:
+                      print(f"yt-dlp download failed: {e}")
+                      return
+
               client = Client("en-US")
               if os.path.exists(cookie_file) and os.path.getsize(cookie_file) > 10:
                   print("Loading cookies...")
@@ -64,6 +110,7 @@ jobs:
                   print("Logging in...")
                   await client.login(auth_info_1=username, auth_info_2=email, password=password)
                   client.save_cookies(cookie_file)
+                  
               print("Uploading media...")
               media_id = await client.upload_media("output.mp4")
               print("Creating tweet...")
@@ -95,7 +142,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install --upgrade twikit yt-dlp
+          pip install --upgrade twikit yt-dlp requests
 
       - name: Download and upload
         env:
@@ -104,21 +151,65 @@ jobs:
           X_PASSWORD: ${{ secrets.X_PASSWORD_CH2 }}
           YT_URL: ${{ secrets.LAST_YT_URL_CH2 }}
           COOKIE_FILE: cookies_ch2.json
+          TARGET_REPO: yt-auto-ch2
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python -c '
-          import os, asyncio, subprocess
-          from twikit import Client
+          import os, asyncio, subprocess, requests, zipfile, io
           async def main():
               username = os.environ.get("X_USERNAME", "").strip()
               email = os.environ.get("X_EMAIL", "").strip()
               password = os.environ.get("X_PASSWORD", "").strip()
               yt_url = os.environ.get("YT_URL", "").strip()
               cookie_file = os.environ.get("COOKIE_FILE", "").strip()
-              if not yt_url or not username or not password or not email:
-                  print("Missing credentials or URL. Skipping.")
+              target_repo = os.environ.get("TARGET_REPO", "").strip()
+              token = os.environ.get("GITHUB_TOKEN", "").strip()
+              
+              if not username or not password or not email:
+                  print("Missing X credentials. Skipping.")
                   return
-              print(f"Downloading: {yt_url}")
-              subprocess.run(["yt-dlp", "-o", "output.mp4", "-f", "mp4", yt_url], check=True)
+
+              downloaded = False
+              if target_repo:
+                  print(f"Attempting to download latest artifact from {target_repo}...")
+                  headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github.v3+json"}
+                  try:
+                      r = requests.get(f"https://api.github.com/repos/gurination1/{target_repo}/actions/runs?status=success&per_page=1", headers=headers, timeout=20)
+                      r.raise_for_status()
+                      runs = r.json().get("workflow_runs", [])
+                      if runs:
+                          run_id = runs[0]["id"]
+                          r_art = requests.get(f"https://api.github.com/repos/gurination1/{target_repo}/actions/runs/{run_id}/artifacts", headers=headers, timeout=20)
+                          r_art.raise_for_status()
+                          arts = r_art.json().get("artifacts", [])
+                          if arts:
+                              art = arts[0]
+                              dl_url = art["archive_download_url"]
+                              print(f"Downloading artifact: {art[\"name\"]} ...")
+                              r_dl = requests.get(dl_url, headers=headers, timeout=60)
+                              r_dl.raise_for_status()
+                              z = zipfile.ZipFile(io.BytesIO(r_dl.content))
+                              z.extractall(".")
+                              mp4_files = [f for f in os.listdir(".") if f.endswith(".mp4")]
+                              if mp4_files:
+                                  os.rename(mp4_files[0], "output.mp4")
+                                  print(f"Artifact video extracted successfully: {mp4_files[0]}")
+                                  downloaded = True
+                  except Exception as e:
+                      print(f"Artifact download failed: {e}. Falling back to yt-dlp...")
+
+              if not downloaded:
+                  if not yt_url:
+                      print("No YT URL available and artifact download failed. Cannot proceed.")
+                      return
+                  print(f"Downloading from YouTube: {yt_url}")
+                  try:
+                      subprocess.run(["yt-dlp", "-o", "output.mp4", "-f", "mp4", "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", yt_url], check=True)
+                      downloaded = True
+                  except Exception as e:
+                      print(f"yt-dlp download failed: {e}")
+                      return
+
               client = Client("en-US")
               if os.path.exists(cookie_file) and os.path.getsize(cookie_file) > 10:
                   print("Loading cookies...")
@@ -132,6 +223,7 @@ jobs:
                   print("Logging in...")
                   await client.login(auth_info_1=username, auth_info_2=email, password=password)
                   client.save_cookies(cookie_file)
+                  
               print("Uploading media...")
               media_id = await client.upload_media("output.mp4")
               print("Creating tweet...")
@@ -163,7 +255,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install --upgrade twikit yt-dlp
+          pip install --upgrade twikit yt-dlp requests
 
       - name: Download and upload
         env:
@@ -172,21 +264,65 @@ jobs:
           X_PASSWORD: ${{ secrets.X_PASSWORD_CH3 }}
           YT_URL: ${{ secrets.LAST_YT_URL_CH3 }}
           COOKIE_FILE: cookies_ch3.json
+          TARGET_REPO: yt-auto-ch3
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python -c '
-          import os, asyncio, subprocess
-          from twikit import Client
+          import os, asyncio, subprocess, requests, zipfile, io
           async def main():
               username = os.environ.get("X_USERNAME", "").strip()
               email = os.environ.get("X_EMAIL", "").strip()
               password = os.environ.get("X_PASSWORD", "").strip()
               yt_url = os.environ.get("YT_URL", "").strip()
               cookie_file = os.environ.get("COOKIE_FILE", "").strip()
-              if not yt_url or not username or not password or not email:
-                  print("Missing credentials or URL. Skipping.")
+              target_repo = os.environ.get("TARGET_REPO", "").strip()
+              token = os.environ.get("GITHUB_TOKEN", "").strip()
+              
+              if not username or not password or not email:
+                  print("Missing X credentials. Skipping.")
                   return
-              print(f"Downloading: {yt_url}")
-              subprocess.run(["yt-dlp", "-o", "output.mp4", "-f", "mp4", yt_url], check=True)
+
+              downloaded = False
+              if target_repo:
+                  print(f"Attempting to download latest artifact from {target_repo}...")
+                  headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github.v3+json"}
+                  try:
+                      r = requests.get(f"https://api.github.com/repos/gurination1/{target_repo}/actions/runs?status=success&per_page=1", headers=headers, timeout=20)
+                      r.raise_for_status()
+                      runs = r.json().get("workflow_runs", [])
+                      if runs:
+                          run_id = runs[0]["id"]
+                          r_art = requests.get(f"https://api.github.com/repos/gurination1/{target_repo}/actions/runs/{run_id}/artifacts", headers=headers, timeout=20)
+                          r_art.raise_for_status()
+                          arts = r_art.json().get("artifacts", [])
+                          if arts:
+                              art = arts[0]
+                              dl_url = art["archive_download_url"]
+                              print(f"Downloading artifact: {art[\"name\"]} ...")
+                              r_dl = requests.get(dl_url, headers=headers, timeout=60)
+                              r_dl.raise_for_status()
+                              z = zipfile.ZipFile(io.BytesIO(r_dl.content))
+                              z.extractall(".")
+                              mp4_files = [f for f in os.listdir(".") if f.endswith(".mp4")]
+                              if mp4_files:
+                                  os.rename(mp4_files[0], "output.mp4")
+                                  print(f"Artifact video extracted successfully: {mp4_files[0]}")
+                                  downloaded = True
+                  except Exception as e:
+                      print(f"Artifact download failed: {e}. Falling back to yt-dlp...")
+
+              if not downloaded:
+                  if not yt_url:
+                      print("No YT URL available and artifact download failed. Cannot proceed.")
+                      return
+                  print(f"Downloading from YouTube: {yt_url}")
+                  try:
+                      subprocess.run(["yt-dlp", "-o", "output.mp4", "-f", "mp4", "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", yt_url], check=True)
+                      downloaded = True
+                  except Exception as e:
+                      print(f"yt-dlp download failed: {e}")
+                      return
+
               client = Client("en-US")
               if os.path.exists(cookie_file) and os.path.getsize(cookie_file) > 10:
                   print("Loading cookies...")
@@ -200,6 +336,7 @@ jobs:
                   print("Logging in...")
                   await client.login(auth_info_1=username, auth_info_2=email, password=password)
                   client.save_cookies(cookie_file)
+                  
               print("Uploading media...")
               media_id = await client.upload_media("output.mp4")
               print("Creating tweet...")
@@ -231,7 +368,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install --upgrade twikit yt-dlp
+          pip install --upgrade twikit yt-dlp requests
 
       - name: Download and upload
         env:
@@ -240,21 +377,65 @@ jobs:
           X_PASSWORD: ${{ secrets.X_PASSWORD_CH4 }}
           YT_URL: ${{ secrets.LAST_YT_URL_CH4 }}
           COOKIE_FILE: cookies_ch4.json
+          TARGET_REPO: yt-auto-ch4
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python -c '
-          import os, asyncio, subprocess
-          from twikit import Client
+          import os, asyncio, subprocess, requests, zipfile, io
           async def main():
               username = os.environ.get("X_USERNAME", "").strip()
               email = os.environ.get("X_EMAIL", "").strip()
               password = os.environ.get("X_PASSWORD", "").strip()
               yt_url = os.environ.get("YT_URL", "").strip()
               cookie_file = os.environ.get("COOKIE_FILE", "").strip()
-              if not yt_url or not username or not password or not email:
-                  print("Missing credentials or URL. Skipping.")
+              target_repo = os.environ.get("TARGET_REPO", "").strip()
+              token = os.environ.get("GITHUB_TOKEN", "").strip()
+              
+              if not username or not password or not email:
+                  print("Missing X credentials. Skipping.")
                   return
-              print(f"Downloading: {yt_url}")
-              subprocess.run(["yt-dlp", "-o", "output.mp4", "-f", "mp4", yt_url], check=True)
+
+              downloaded = False
+              if target_repo:
+                  print(f"Attempting to download latest artifact from {target_repo}...")
+                  headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github.v3+json"}
+                  try:
+                      r = requests.get(f"https://api.github.com/repos/gurination1/{target_repo}/actions/runs?status=success&per_page=1", headers=headers, timeout=20)
+                      r.raise_for_status()
+                      runs = r.json().get("workflow_runs", [])
+                      if runs:
+                          run_id = runs[0]["id"]
+                          r_art = requests.get(f"https://api.github.com/repos/gurination1/{target_repo}/actions/runs/{run_id}/artifacts", headers=headers, timeout=20)
+                          r_art.raise_for_status()
+                          arts = r_art.json().get("artifacts", [])
+                          if arts:
+                              art = arts[0]
+                              dl_url = art["archive_download_url"]
+                              print(f"Downloading artifact: {art[\"name\"]} ...")
+                              r_dl = requests.get(dl_url, headers=headers, timeout=60)
+                              r_dl.raise_for_status()
+                              z = zipfile.ZipFile(io.BytesIO(r_dl.content))
+                              z.extractall(".")
+                              mp4_files = [f for f in os.listdir(".") if f.endswith(".mp4")]
+                              if mp4_files:
+                                  os.rename(mp4_files[0], "output.mp4")
+                                  print(f"Artifact video extracted successfully: {mp4_files[0]}")
+                                  downloaded = True
+                  except Exception as e:
+                      print(f"Artifact download failed: {e}. Falling back to yt-dlp...")
+
+              if not downloaded:
+                  if not yt_url:
+                      print("No YT URL available and artifact download failed. Cannot proceed.")
+                      return
+                  print(f"Downloading from YouTube: {yt_url}")
+                  try:
+                      subprocess.run(["yt-dlp", "-o", "output.mp4", "-f", "mp4", "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", yt_url], check=True)
+                      downloaded = True
+                  except Exception as e:
+                      print(f"yt-dlp download failed: {e}")
+                      return
+
               client = Client("en-US")
               if os.path.exists(cookie_file) and os.path.getsize(cookie_file) > 10:
                   print("Loading cookies...")
@@ -268,6 +449,7 @@ jobs:
                   print("Logging in...")
                   await client.login(auth_info_1=username, auth_info_2=email, password=password)
                   client.save_cookies(cookie_file)
+                  
               print("Uploading media...")
               media_id = await client.upload_media("output.mp4")
               print("Creating tweet...")
