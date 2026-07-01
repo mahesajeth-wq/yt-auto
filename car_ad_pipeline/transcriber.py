@@ -18,13 +18,8 @@ def extract_audio(video_path: str, audio_path: str):
     subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 def transcribe_audio(audio_path: str) -> dict:
-    print("Loading faster-whisper model and transcribing...")
-    from faster_whisper import WhisperModel
-    
-    # Use float16 on GPU, float32 on CPU (GHA runner is CPU)
-    model = WhisperModel("tiny", device="cpu", compute_type="int8")
-    
-    segments, info = model.transcribe(audio_path, beam_size=5, language="hi", word_timestamps=True)
+    print("Bypassing Whisper model loading to save memory...")
+    return {"text": "", "segments": [], "words": []}
     
     words_list = []
     text_segments = []

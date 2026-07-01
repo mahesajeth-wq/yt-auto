@@ -5,60 +5,31 @@ def align_subtitles(tts_audio_path: str, hinglish_text: str) -> list:
     """
     Transcribes the generated TTS audio to get word-level timestamps,
     and maps these timestamps to the Hinglish words.
+def align_subtitles(tts_audio_path: str, hinglish_text: str) -> list:
     """
-    from faster_whisper import WhisperModel
+    Distributes the Hinglish words evenly across the duration of the audio clip.
+    This avoids loading the heavy Whisper model, saving RAM and CPU.
+    """
+    import subprocess
+    print(f"Timing alignment (even distribution) for: {tts_audio_path}")
     
-    print(f"Transcribing generated TTS {tts_audio_path} for timing alignment...")
-    model = WhisperModel("tiny", device="cpu", compute_type="int8")
-    segments, _ = model.transcribe(tts_audio_path, beam_size=5, word_timestamps=True)
-    
-    transcribed_words = []
-    for segment in segments:
-        if segment.words:
-            for w in segment.words:
-                transcribed_words.append({
-                    "word": w.word.strip(),
-                    "start": w.start,
-                    "end": w.end
-                })
-                
     hinglish_words = [w.strip() for w in hinglish_text.split() if w.strip()]
-    
     aligned = []
-    num_transcribed = len(transcribed_words)
     num_hinglish = len(hinglish_words)
     
-    if num_transcribed == 0:
-        # Fallback if transcription failed: distribute evenly
-        # Let's get the audio duration using ffprobe
-        import subprocess
-        cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nocey=1", tts_audio_path]
-        # Wait, nocey should be nokey
-        cmd[-1] = "default=noprint_wrappers=1:nokey=1"
-        try:
-            dur = float(subprocess.check_output(cmd).decode().strip())
-        except Exception:
-            dur = 5.0
-        step = dur / max(1, num_hinglish)
-        for i, word in enumerate(hinglish_words):
-            aligned.append({
-                "word": word,
-                "start": i * step,
-                "end": (i + 1) * step
-            })
-        return aligned
+    cmd = ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", tts_audio_path]
+    try:
+        dur = float(subprocess.check_output(cmd).decode().strip())
+    except Exception:
+        dur = 5.0
         
-    # Map word-by-word
+    step = dur / max(1, num_hinglish)
     for i, word in enumerate(hinglish_words):
-        # Map to the corresponding index in transcribed words, capping at the last word
-        mapped_idx = min(i, num_transcribed - 1)
-        w_info = transcribed_words[mapped_idx]
         aligned.append({
             "word": word,
-            "start": w_info["start"],
-            "end": w_info["end"]
+            "start": i * step,
+            "end": (i + 1) * step
         })
-        
     return aligned
 
 def generate_ass_subtitles(aligned_scenes: list, output_path: str):
