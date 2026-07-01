@@ -67,6 +67,15 @@ def run_pipeline(video_path: str, output_dir: str, resume: bool = False):
             f.write(market_report)
         print(f"Market price report saved to {market_path}")
     
+    # Clean up old tts files to force regeneration with the new happy energetic voice tone
+    print("Clearing old TTS WAV files to force regeneration with the new energetic tone...")
+    for f in os.listdir(temp_dir):
+        if f.startswith("scene_") and f.endswith("_tts.wav"):
+            try:
+                os.remove(os.path.join(temp_dir, f))
+            except Exception:
+                pass
+
     # Step 4: Generate Voiceover using Gemini TTS
     print("\n--- STEP 4: Generating Voiceover ---")
     scene_cues = ad_script.get("scene_cues", [])
@@ -86,18 +95,96 @@ def run_pipeline(video_path: str, output_dir: str, resume: bool = False):
             })
             
     subtitle_ass_path = os.path.join(output_dir, "subtitles.ass")
-    generate_ass_subtitles(aligned_scenes, subtitle_ass_path)
+    generate_ass_subtitles(aligned_scenes, ad_script.get("car_details", []), subtitle_ass_path)
     
     # Step 7/8/9: Compile and render final video
     print("\n--- STEP 7/8/9: Video Compilation and Rendering ---")
-    # Choose music from cache
-    bg_music = "/root/yt-auto/cache_music/freesound_432835.wav"
+    # Choose music
+    bg_music = get_upbeat_bgm(output_dir)
     final_video_path = os.path.join(output_dir, "final_ad_video.mp4")
     compile_ad(video_path, scene_cues, tts_audios, bg_music, subtitle_ass_path, temp_dir, final_video_path)
     
     duration = time.time() - start_time
     print(f"\nPipeline finished successfully in {duration/60:.2f} minutes!")
     print(f"Final output: {final_video_path}")
+
+def get_upbeat_bgm(output_dir: str) -> str:
+    import requests
+    import subprocess
+    
+    cache_dir = "/root/yt-auto/cache_music"
+    os.makedirs(cache_dir, exist_ok=True)
+    
+    # Try fetching upbeat track using FREESOUND_API_KEY if available in local_env.sh
+    freesound_key = ""
+    local_env = "/root/yt-auto/local_env.sh"
+    if os.path.exists(local_env):
+        with open(local_env, "r") as f:
+            for line in f:
+                if "export FREESOUND_API_KEY=" in line:
+                    freesound_key = line.split("=", 1)[1].strip().strip('"').strip("'")
+                    break
+                    
+    if freesound_key:
+        queries = ["upbeat car commercial music", "energetic driving background music", "happy corporate instrumental"]
+        search_url = "https://freesound.org/apiv2/search/text/"
+        for q in queries:
+            print(f"[Music Search] Querying Freesound for: {q}")
+            params = {
+                "query": q,
+                "filter": 'duration:[30 TO 120] license:"Creative Commons 0"',
+                "fields": "id,name,duration,previews",
+                "page_size": 3,
+                "token": freesound_key,
+            }
+            try:
+                r = requests.get(search_url, params=params, timeout=15)
+                r.raise_for_status()
+                results = r.json().get("results", [])
+                if results:
+                    pick = results[0]
+                    sound_id = pick["id"]
+                    preview_url = pick["previews"]["preview-hq-mp3"]
+                    cache_path = os.path.join(cache_dir, f"freesound_{sound_id}.wav")
+                    
+                    if os.path.exists(cache_path):
+                        print(f"[Music Search] Found cached upbeat BGM: {cache_path}")
+                        return cache_path
+                        
+                    print(f"[Music Search] Downloading upbeat track: {pick['name']}")
+                    mp3_path = os.path.join(output_dir, "temp_bgm.mp3")
+                    dl = requests.get(preview_url, timeout=20)
+                    dl.raise_for_status()
+                    with open(mp3_path, "wb") as f:
+                        f.write(dl.content)
+                    
+                    # Convert to mono WAV
+                    subprocess.run(
+                        ["ffmpeg", "-y", "-i", mp3_path, "-ar", "44100", "-ac", "1", cache_path],
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True
+                    )
+                    if os.path.exists(mp3_path):
+                        os.remove(mp3_path)
+                    return cache_path
+            except Exception as e:
+                print(f"[Music Search] Search failed for {q}: {e}")
+                
+    # Fallback to known energetic cached tracks
+    fallbacks = [
+        "freesound_592783.wav",
+        "freesound_785704.wav",
+        "freesound_620197.wav"
+    ]
+    for fb in fallbacks:
+        fb_path = os.path.join(cache_dir, fb)
+        if os.path.exists(fb_path):
+            print(f"[Music Search] Using fallback cached upbeat BGM: {fb_path}")
+            return fb_path
+            
+    # Absolute fallback
+    default_bg = "/root/yt-auto/cache_music/freesound_432835.wav"
+    print(f"[Music Search] Using default BGM: {default_bg}")
+    return default_bg
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:

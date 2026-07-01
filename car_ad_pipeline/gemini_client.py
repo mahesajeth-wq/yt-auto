@@ -207,9 +207,9 @@ class GeminiClient:
         def make_request(key):
             url = f"{GEMINI_API_BASE}/models/{GEMINI_TTS_MODEL}:generateContent?key={key}"
             director_instructions = (
-                f"Vocal Delivery Guide: Speak in a salesman tone: confident, conversational, and persuasive. "
-                f"Pitch is natural, pacing has deliberate short pauses for dramatic effect. "
-                f"Speak clearly and with high quality. Tone setting: {vocal_tone}."
+                "Vocal Delivery Guide: Speak in an EXTREMELY ENERGETIC, happy, and highly enthusiastic salesman tone. "
+                "Delivery must be upbeat, friendly, fast-paced but clear, filled with excitement and positive energy. "
+                f"Make it sound attractive, engaging, and persuasive. Tone setting: {vocal_tone}."
             )
             full_prompt = (
                 f"Director Instructions:\n{director_instructions}\n\n"

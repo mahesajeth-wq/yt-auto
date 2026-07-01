@@ -28,34 +28,54 @@ def build_scene_clip(raw_video: str, start: float, end: float, tts_audio: str, o
         cmd_v = [
             "ffmpeg", "-y",
             "-ss", f"{start:.3f}",
+            "-to", f"{start + adur:.3f}",
             "-i", raw_video,
-            "-t", f"{adur:.3f}",
             "-an",
             "-c:v", "libx264",
             "-crf", "23",
             "-pix_fmt", "yuv420p",
             temp_v
         ]
+        result = subprocess.run(cmd_v, capture_output=True)
+        if result.returncode != 0:
+            print(f"FFmpeg scene video cut stderr: {result.stderr.decode()[-500:]}")
+            raise RuntimeError(f"FFmpeg scene video cut failed with exit code {result.returncode}")
     else:
-        # Pad last frame (static hold) using tpad
-        pad_dur = adur - vdur
-        cmd_v = [
+        # Cut the clip of exact length vdur, then loop it up to adur
+        temp_cut = output_path.replace(".mp4", "_cut.mp4")
+        cmd_cut = [
             "ffmpeg", "-y",
             "-ss", f"{start:.3f}",
             "-to", f"{end:.3f}",
             "-i", raw_video,
-            "-vf", f"tpad=stop_mode=clone:stop_duration={pad_dur:.3f}",
             "-an",
+            "-c:v", "libx264",
+            "-crf", "23",
+            "-pix_fmt", "yuv420p",
+            temp_cut
+        ]
+        result = subprocess.run(cmd_cut, capture_output=True)
+        if result.returncode != 0:
+            print(f"FFmpeg cut clip stderr: {result.stderr.decode()[-500:]}")
+            raise RuntimeError(f"FFmpeg cut clip failed with exit code {result.returncode}")
+            
+        # Loop the cut clip up to adur
+        cmd_loop = [
+            "ffmpeg", "-y",
+            "-stream_loop", "-1",
+            "-i", temp_cut,
+            "-t", f"{adur:.3f}",
             "-c:v", "libx264",
             "-crf", "23",
             "-pix_fmt", "yuv420p",
             temp_v
         ]
-        
-    result = subprocess.run(cmd_v, capture_output=True)
-    if result.returncode != 0:
-        print(f"FFmpeg scene video stderr: {result.stderr.decode()[-500:]}")
-        raise RuntimeError(f"FFmpeg scene video cut failed with exit code {result.returncode}")
+        result = subprocess.run(cmd_loop, capture_output=True)
+        if os.path.exists(temp_cut):
+            os.remove(temp_cut)
+        if result.returncode != 0:
+            print(f"FFmpeg loop video stderr: {result.stderr.decode()[-500:]}")
+            raise RuntimeError(f"FFmpeg loop video failed with exit code {result.returncode}")
     
     # Merge video and TTS audio
     cmd_merge = [
@@ -114,29 +134,74 @@ def compile_ad(raw_video: str, scene_cues: list, tts_audios: list, bg_music: str
     if result.returncode != 0:
         print(f"FFmpeg concat stderr: {result.stderr.decode()}")
     
-    # Mix background music and burn ASS subtitles with LUT/contrast filter
-    print("Mixing background music and burning subtitles...")
+    # Mix background music, SFX track, and burn ASS subtitles with LUT/contrast filter
+    print("Generating SFX and mixing final audio/video...")
     
-    # If the video is portrait (which it is since rotation -90 is shown in ffprobe), 
-    # we need to be careful with filter syntax. Standard ass filter burns directly.
-    # We add contrast and saturation using eq filter.
+    # Calculate boundary times for SFX whooshes
+    durations = []
+    for a in tts_audios:
+        if a and os.path.exists(a):
+            durations.append(get_audio_duration(a))
+        else:
+            durations.append(5.0)
+            
+    boundary_times = []
+    curr = 0.0
+    for d in durations[:-1]:
+        curr += d
+        boundary_times.append(curr)
+    total_dur = curr + durations[-1]
+    
+    # Generate SFX track
+    sfx_track_path = None
+    try:
+        from pipeline.sfx import create_sfx_track
+        print(f"Creating SFX track for boundary times: {boundary_times} (total duration: {total_dur:.2f}s)")
+        sfx_temp = create_sfx_track(boundary_times, total_dur, sample_rate=44100, whoosh_volume=0.35, topic="car ad")
+        if sfx_temp and os.path.exists(sfx_temp):
+            sfx_track_path = os.path.join(output_dir, "sfx_track.wav")
+            import shutil
+            shutil.copy(sfx_temp, sfx_track_path)
+            print(f"SFX track copied to {sfx_track_path}")
+    except Exception as e:
+        print(f"Warning: Failed to create SFX track: {e}")
+        
     vf_filter = f"ass={subtitle_ass},eq=contrast=1.05:saturation=1.1"
     
-    cmd_final = [
-        "ffmpeg", "-y",
-        "-i", concatenated_raw,
-        "-i", bg_music,
-        "-filter_complex", f"[0:a]volume=1.0[v_a];[1:a]volume=0.06[m_a];[v_a][m_a]amix=inputs=2:duration=first[a];[0:v]{vf_filter}[v]",
-        "-map", "[v]",
-        "-map", "[a]",
-        "-c:v", "libx264",
-        "-crf", "21",
-        "-preset", "fast",
-        "-c:a", "aac",
-        "-b:a", "192k",
-        final_path
-    ]
-    
+    if sfx_track_path and os.path.exists(sfx_track_path):
+        print("Mixing Main Audio + BGM + SFX...")
+        cmd_final = [
+            "ffmpeg", "-y",
+            "-i", concatenated_raw,
+            "-i", bg_music,
+            "-i", sfx_track_path,
+            "-filter_complex", f"[0:a]volume=1.0[v_a];[1:a]volume=0.07[m_a];[2:a]volume=1.0[s_a];[v_a][m_a][s_a]amix=inputs=3:duration=first[a];[0:v]{vf_filter}[v]",
+            "-map", "[v]",
+            "-map", "[a]",
+            "-c:v", "libx264",
+            "-crf", "21",
+            "-preset", "fast",
+            "-c:a", "aac",
+            "-b:a", "192k",
+            final_path
+        ]
+    else:
+        print("Mixing Main Audio + BGM only (no SFX)...")
+        cmd_final = [
+            "ffmpeg", "-y",
+            "-i", concatenated_raw,
+            "-i", bg_music,
+            "-filter_complex", f"[0:a]volume=1.0[v_a];[1:a]volume=0.07[m_a];[v_a][m_a]amix=inputs=2:duration=first[a];[0:v]{vf_filter}[v]",
+            "-map", "[v]",
+            "-map", "[a]",
+            "-c:v", "libx264",
+            "-crf", "21",
+            "-preset", "fast",
+            "-c:a", "aac",
+            "-b:a", "192k",
+            final_path
+        ]
+        
     result = subprocess.run(cmd_final, capture_output=True)
     if result.returncode != 0:
         print(f"FFmpeg final stderr: {result.stderr.decode()[-500:]}")
