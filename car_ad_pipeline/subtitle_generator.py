@@ -3,10 +3,6 @@ import json
 
 def align_subtitles(tts_audio_path: str, hinglish_text: str) -> list:
     """
-    Transcribes the generated TTS audio to get word-level timestamps,
-    and maps these timestamps to the Hinglish words.
-def align_subtitles(tts_audio_path: str, hinglish_text: str) -> list:
-    """
     Distributes the Hinglish words evenly across the duration of the audio clip.
     This avoids loading the heavy Whisper model, saving RAM and CPU.
     """
