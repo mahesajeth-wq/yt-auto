@@ -95,8 +95,13 @@ Generate the output strictly conforming to the specified JSON schema.
 """
 
     contents = [
-        {"fileData": {"mimeType": "video/mp4", "fileUri": file_uri}},
-        {"text": prompt}
+        {
+            "role": "user",
+            "parts": [
+                {"fileData": {"mimeType": "video/mp4", "fileUri": file_uri}},
+                {"text": prompt}
+            ]
+        }
     ]
     
     # Run vision pass with media_resolution: low
@@ -131,8 +136,13 @@ Generate the output strictly conforming to the specified JSON schema.
                     print(f"Querying clip at DEFAULT resolution: {re_read_query}")
                     clip_prompt = f"Analyze this short video clip. {re_read_query} Give a direct answer with precise numbers."
                     clip_contents = [
-                        {"fileData": {"mimeType": "video/mp4", "fileUri": clip_uri}},
-                        {"text": clip_prompt}
+                        {
+                            "role": "user",
+                            "parts": [
+                                {"fileData": {"mimeType": "video/mp4", "fileUri": clip_uri}},
+                                {"text": clip_prompt}
+                            ]
+                        }
                     ]
                     # Default media resolution call
                     clarification = client.generate_content(clip_contents, low_res=False)
