@@ -92,7 +92,7 @@ def compile_ad(raw_video: str, scene_cues: list, tts_audios: list, bg_music: str
     concat_list_path = os.path.join(output_dir, "concat_list.txt")
     with open(concat_list_path, "w") as f:
         for clip in scene_clips:
-            f.write(f"file '{os.path.basename(clip)}'\n")
+            f.write(f"file '{clip}'\n")
             
     # Concatenate clips
     concatenated_raw = os.path.join(output_dir, "concatenated_raw.mp4")
@@ -104,7 +104,9 @@ def compile_ad(raw_video: str, scene_cues: list, tts_audios: list, bg_music: str
         "-c", "copy",
         concatenated_raw
     ]
-    subprocess.run(cmd_concat, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    result = subprocess.run(cmd_concat, check=True, capture_output=True)
+    if result.returncode != 0:
+        print(f"FFmpeg concat stderr: {result.stderr.decode()}")
     
     # Mix background music and burn ASS subtitles with LUT/contrast filter
     print("Mixing background music and burning subtitles...")
@@ -129,5 +131,11 @@ def compile_ad(raw_video: str, scene_cues: list, tts_audios: list, bg_music: str
         final_path
     ]
     
-    subprocess.run(cmd_final, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    result = subprocess.run(cmd_final, capture_output=True)
+    if result.returncode != 0:
+        print(f"FFmpeg final stderr: {result.stderr.decode()[-500:]}")
+        raise RuntimeError(f"FFmpeg final render failed with exit code {result.returncode}")
+    
+    if not os.path.exists(final_path):
+        raise RuntimeError(f"Final video not found at {final_path} after ffmpeg!")
     print(f"Final video successfully generated at {final_path}!")

@@ -35,6 +35,9 @@ class GeminiClient:
                         print(f"[GeminiClient] 429 Rate Limit encountered. Sleeping {retry_sleep}s (attempt {attempt+1}/{max_retries}) using key {key[:10]}...")
                         time.sleep(retry_sleep)
                         continue
+                    if response.status_code == 403:
+                        print(f"[GeminiClient] 403 Forbidden for key {key[:10]}. Key may be invalid. Rotating immediately.")
+                        break  # break inner loop to rotate key
                     return response
                 except requests.RequestException as e:
                     print(f"[GeminiClient] Request exception: {e}. Retrying same key...")
