@@ -27,7 +27,7 @@ jobs:
           cache: 'pip'
 
       - name: Setup FFmpeg
-        uses: FedericoTerzi/setup-ffmpeg@v3
+        uses: FedericoCarboni/setup-ffmpeg@v3
 
       - name: Cache Whisper Models
         uses: actions/cache@v4
