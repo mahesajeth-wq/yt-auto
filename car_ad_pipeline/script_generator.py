@@ -4,49 +4,49 @@ import subprocess
 from car_ad_pipeline.gemini_client import GeminiClient
 
 SCHEMA = {
-    "type": "OBJECT",
+    "type": "object",
     "properties": {
         "car_details": {
-            "type": "ARRAY",
+            "type": "array",
             "items": {
-                "type": "OBJECT",
+                "type": "object",
                 "properties": {
-                    "model": {"type": "STRING"},
-                    "color": {"type": "STRING"},
-                    "specs": {"type": "STRING"},
+                    "model": {"type": "string"},
+                    "color": {"type": "string"},
+                    "specs": {"type": "string"},
                     "visual_timestamps": {
-                        "type": "OBJECT",
+                        "type": "object",
                         "properties": {
-                            "start": {"type": "NUMBER"},
-                            "end": {"type": "NUMBER"}
+                            "start": {"type": "number"},
+                            "end": {"type": "number"}
                         },
                         "required": ["start", "end"]
                     },
-                    "odometer_value": {"type": "STRING"},
-                    "odometer_confidence": {"type": "STRING", "enum": ["high", "low"]},
-                    "price_value": {"type": "STRING"},
-                    "price_confidence": {"type": "STRING", "enum": ["high", "low"]}
+                    "odometer_value": {"type": "string"},
+                    "odometer_confidence": {"type": "string", "enum": ["high", "low"]},
+                    "price_value": {"type": "string"},
+                    "price_confidence": {"type": "string", "enum": ["high", "low"]}
                 },
                 "required": ["model", "color", "specs", "visual_timestamps", "odometer_confidence", "price_confidence"]
             }
         },
         "scene_cues": {
-            "type": "ARRAY",
+            "type": "array",
             "items": {
-                "type": "OBJECT",
+                "type": "object",
                 "properties": {
-                    "start_time": {"type": "NUMBER"},
-                    "end_time": {"type": "NUMBER"},
-                    "visual_description": {"type": "STRING"},
-                    "detected_text_overlays": {"type": "STRING"},
-                    "ad_copy_hindi": {"type": "STRING"},
-                    "ad_copy_hinglish": {"type": "STRING"},
-                    "visual_focus": {"type": "STRING"}
+                    "start_time": {"type": "number"},
+                    "end_time": {"type": "number"},
+                    "visual_description": {"type": "string"},
+                    "detected_text_overlays": {"type": "string"},
+                    "ad_copy_hindi": {"type": "string"},
+                    "ad_copy_hinglish": {"type": "string"},
+                    "visual_focus": {"type": "string"}
                 },
                 "required": ["start_time", "end_time", "visual_description", "ad_copy_hindi", "ad_copy_hinglish", "visual_focus"]
             }
         },
-        "overall_market_query": {"type": "STRING"}
+        "overall_market_query": {"type": "string"}
     },
     "required": ["car_details", "scene_cues", "overall_market_query"]
 }
