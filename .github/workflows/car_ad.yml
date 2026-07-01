@@ -26,14 +26,6 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Install FFmpeg & Fonts
-        run: |
-          sudo apt-get update || true
-          sudo apt-get install -y ffmpeg libass-dev
-          mkdir -p ~/.local/share/fonts
-          wget -O ~/.local/share/fonts/BebasNeue-Regular.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/bebasneue/BebasNeue-Regular.ttf
-          fc-cache -fv
-
       - name: Cache Whisper Models
         uses: actions/cache@v4
         with:
