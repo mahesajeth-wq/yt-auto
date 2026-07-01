@@ -35,6 +35,14 @@ def generate_voiceover(client: GeminiClient, scene_cues: list, output_dir: str) 
             audio_paths.append(None)
             continue
             
+        audio_filename = f"scene_{i+1}_tts.wav"
+        audio_path = os.path.join(output_dir, audio_filename)
+        
+        if os.path.exists(audio_path) and os.path.getsize(audio_path) > 1000:
+            print(f"Voiceover for Scene {i+1} already exists at {audio_path}, skipping generation.")
+            audio_paths.append(audio_path)
+            continue
+            
         print(f"Generating TTS for Scene {i+1}: '{ad_copy}'...")
         
         audio_data = client.generate_tts(ad_copy, voice="Aoede")

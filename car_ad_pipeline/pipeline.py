@@ -67,14 +67,7 @@ def run_pipeline(video_path: str, output_dir: str, resume: bool = False):
             f.write(market_report)
         print(f"Market price report saved to {market_path}")
     
-    # Clean up old tts files to force regeneration with the new happy energetic voice tone
-    print("Clearing old TTS WAV files to force regeneration with the new energetic tone...")
-    for f in os.listdir(temp_dir):
-        if f.startswith("scene_") and f.endswith("_tts.wav"):
-            try:
-                os.remove(os.path.join(temp_dir, f))
-            except Exception:
-                pass
+
 
     # Step 4: Generate Voiceover using Gemini TTS
     print("\n--- STEP 4: Generating Voiceover ---")
