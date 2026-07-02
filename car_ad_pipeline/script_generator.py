@@ -89,7 +89,7 @@ Use this transcript as a timing anchor. When describing scenes and writing ad co
 5. Do NOT round numbers. Speak precise numbers like 87,000 km or ₹ 45 Lakhs to build high client trust.
 6. Generate two versions of the ad copy for each scene:
    - `ad_copy_hindi`: Spoken narration copy in Hindi (Devanagari script) containing emotional inline direction tags like [excited], [confident], [pause].
-   - `ad_copy_hinglish`: Punchy subtitle text in Hinglish (Hindi words written in Latin script) representing the translation.
+   - `ad_copy_hinglish`: Subtitle text in Hinglish (Hindi spoken words written transliterated using English/Latin alphabet, e.g. "sabse pehli gaadi" instead of "first car is"). It MUST match the spoken Hindi words exactly but written in English characters, NOT English translations.
 
 Generate the output strictly conforming to the specified JSON schema.
 """
