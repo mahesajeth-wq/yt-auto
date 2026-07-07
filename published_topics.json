@@ -39,8 +39,9 @@
     "Scientists are making quantum time appear to flow backward, challenging fundamental notions of the universe's arrow of time.",
     "Engineers slash diesel pollution by over 60% with simple water-infused fuel, revolutionizing clean energy chemistry.",
     "How **directed evolution** actually works, creating enzymes with capabilities far beyond what natural selection could achieve, by deliberately introducing controlled errors into DNA sequences to accelerate beneficial mutations.",
-    "Neuromorphic chips like Intel's Loihi 3 and BrainChip's Akida 2.0 are now enabling energy-efficient, real-time autonomous robotics, with commercial applications shipping in 2026 for drones and industrial automation."
+    "Neuromorphic chips like Intel's Loihi 3 and BrainChip's Akida 2.0 are now enabling energy-efficient, real-time autonomous robotics, with commercial applications shipping in 2026 for drones and industrial automation.",
+    "James Webb Space Telescope detects a mysterious, never-before-seen chemical absorption line in the atmospheres of Pluto and Titan, hinting at an unknown molecule that challenges current planetary models."
   ],
-  "subcluster_idx": 0,
-  "call_count": 40
+  "subcluster_idx": 1,
+  "call_count": 41
 }
