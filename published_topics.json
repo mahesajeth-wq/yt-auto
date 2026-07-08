@@ -41,8 +41,9 @@
     "How **directed evolution** actually works, creating enzymes with capabilities far beyond what natural selection could achieve, by deliberately introducing controlled errors into DNA sequences to accelerate beneficial mutations.",
     "Neuromorphic chips like Intel's Loihi 3 and BrainChip's Akida 2.0 are now enabling energy-efficient, real-time autonomous robotics, with commercial applications shipping in 2026 for drones and industrial automation.",
     "James Webb Space Telescope detects a mysterious, never-before-seen chemical absorption line in the atmospheres of Pluto and Titan, hinting at an unknown molecule that challenges current planetary models.",
-    "How quantum **decoherence** actually works, making the bizarre quantum world disappear and giving rise to our classical reality."
+    "How quantum **decoherence** actually works, making the bizarre quantum world disappear and giving rise to our classical reality.",
+    "Researchers are rapidly advancing alternative battery chemistries like zinc-ion and sodium-ion, promising safer, more sustainable, and abundant energy storage solutions beyond traditional lithium-ion technology."
   ],
-  "subcluster_idx": 2,
-  "call_count": 42
+  "subcluster_idx": 3,
+  "call_count": 43
 }
