@@ -44,8 +44,9 @@
     "How quantum **decoherence** actually works, making the bizarre quantum world disappear and giving rise to our classical reality.",
     "Researchers are rapidly advancing alternative battery chemistries like zinc-ion and sodium-ion, promising safer, more sustainable, and abundant energy storage solutions beyond traditional lithium-ion technology.",
     "Scientists create 'SpudCells,' the first fully synthetic cells from non-living chemicals capable of growth and reproduction, blurring the lines of what defines life itself.",
-    "How **Landauer's Principle** means every erased bit of information *must* dissipate a tiny amount of heat, setting a fundamental thermodynamic limit on the energy efficiency of future computing."
+    "How **Landauer's Principle** means every erased bit of information *must* dissipate a tiny amount of heat, setting a fundamental thermodynamic limit on the energy efficiency of future computing.",
+    "Euclid Space Telescope unveils the universe's oldest and most luminous quasars, challenging theories on early supermassive black hole growth."
   ],
-  "subcluster_idx": 0,
-  "call_count": 45
+  "subcluster_idx": 1,
+  "call_count": 46
 }
