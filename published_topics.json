@@ -46,8 +46,9 @@
     "Scientists create 'SpudCells,' the first fully synthetic cells from non-living chemicals capable of growth and reproduction, blurring the lines of what defines life itself.",
     "How **Landauer's Principle** means every erased bit of information *must* dissipate a tiny amount of heat, setting a fundamental thermodynamic limit on the energy efficiency of future computing.",
     "Euclid Space Telescope unveils the universe's oldest and most luminous quasars, challenging theories on early supermassive black hole growth.",
-    "Physicists are closing in on a unified theory of quantum gravity, aiming to reconcile the universe's largest and smallest scales."
+    "Physicists are closing in on a unified theory of quantum gravity, aiming to reconcile the universe's largest and smallest scales.",
+    "How **single-atom catalysts** actually work, where individual metal atoms act as 'super-efficient' reaction sites, defying the traditional need for bulk material for chemical transformations due to unique electronic structures."
   ],
-  "subcluster_idx": 2,
-  "call_count": 47
+  "subcluster_idx": 3,
+  "call_count": 48
 }
