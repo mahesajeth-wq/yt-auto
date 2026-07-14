@@ -55,8 +55,9 @@
     "AI-driven molecular discovery with CoCoGraph, generating millions of novel, chemically valid molecules to revolutionize drug and material development.",
     "How **DNA origami** allows scientists to fold genetic material into complex 3D nanostructures, turning life's blueprint into a programmable building block for molecular machines.",
     "Autonomous AI Agents Shift from Copilots to Workflow Execution, Prompting New Governance Challenges",
-    "Hubble and Webb discover a stellar-mass black hole in Omega Centauri, challenging black hole formation theories."
+    "Hubble and Webb discover a stellar-mass black hole in Omega Centauri, challenging black hole formation theories.",
+    "How the **Strong CP Problem** reveals a puzzling absence of a specific neutron electric dipole moment, suggesting a fundamental symmetry (CP-symmetry) is unexpectedly preserved in the strong nuclear force, defying theoretical predictions."
   ],
-  "subcluster_idx": 1,
-  "call_count": 56
+  "subcluster_idx": 2,
+  "call_count": 57
 }
